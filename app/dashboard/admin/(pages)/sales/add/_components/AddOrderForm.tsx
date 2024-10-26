@@ -10,8 +10,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product, Type } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Select from "react-select"; // Import react-select
-import Loading from "@/app/loading";
+import Select from "react-select";
 
 // SKU Interface
 export interface SKU {
@@ -50,10 +49,10 @@ export interface OrderItem {
 // Account Interface
 interface Account {
   id: string;
-  account: string; // Account type (e.g., "KES", "USD")
+  account: string;
   balance: number;
   cashBalance: number;
-  default: boolean; // Indicates if this is the default account
+  default: boolean;
 }
 
 // Order Interface
@@ -63,6 +62,8 @@ export interface Order {
   type: Type;
   accountId: string;
   items: OrderItem[];
+  cashAmount?: number;
+  digitalAmount?: number;
 }
 
 interface FormValues {
@@ -79,6 +80,8 @@ interface FormValues {
   status: string;
   type: Type;
   accountId: string;
+  cashAmount?: number;
+  digitalAmount?: number;
 }
 
 // Option type for react-select
@@ -96,6 +99,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     {}
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const [totalAmount, setTotalAmount] = useState<string>("0.00");
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -120,13 +124,15 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             stock: item.sku.stockQuantity,
           })),
           status: order.status,
-          type: order.type,
+          type: "both", // Set default type to "both"
           accountId: order.accountId || "",
+          cashAmount: order.cashAmount || undefined,
+          digitalAmount: order.digitalAmount || undefined,
         }
       : {
           products: [],
           status: "paid",
-          type: Type.cash,
+          type: "both", // Default to "both"
           accountId: "",
         },
     mode: "onChange",
@@ -138,7 +144,8 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   });
 
   const watchProducts = watch("products");
-  const watchAccountId = watch("accountId");
+  const watchCashAmount = watch("cashAmount");
+  const watchDigitalAmount = watch("digitalAmount");
 
   // Fetch products using useQuery
   const { data: products, isLoading: productsLoading } = useQuery({
@@ -159,115 +166,28 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   });
 
   useEffect(() => {
-    if (accounts) {
-      const defaultAccount = accounts.find((account) => account.default);
-      if (defaultAccount) {
-        setValue("accountId", defaultAccount.id);
-      } else if (accounts.length > 0) {
-        setValue("accountId", accounts[0].id);
-      }
-    }
-  }, [accounts, setValue]);
-
-  useEffect(() => {
-    if (order) {
-      order.items.forEach((item, index) => {
-        const product = item.product;
-        if (product) {
-          setSelectedVariants((prev) => ({
-            ...prev,
-            [index]: product.variants,
-          }));
-          const variant = product.variants.find(
-            (v) => v.id === item.sku.variantId
-          );
-          if (variant) {
-            setSelectedSkus((prev) => ({ ...prev, [index]: variant.skus }));
-          }
-        }
-      });
-    }
-  }, [order]);
-
-  // if (productsLoading || accountsLoading) {
-  //   return <Loading />;
-  // }
-
-  const productOptions: ProductOption[] = products
-    ? products.map((product) => ({
-        value: product.id,
-        label: `${product.name} (${product.stockQuantity} Pcs)`,
-        product,
-      }))
-    : [];
-
-  const handleProductSelect = (selectedOption: ProductOption | null) => {
-    if (!selectedOption) return;
-
-    const product = selectedOption.product;
-    const productIndex = fields.length;
-
-    append({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      stock: product.stockQuantity,
-    });
-
-    setSelectedVariants((prev) => ({
-      ...prev,
-      [productIndex]: product.variants,
-    }));
-  };
-
-  const handleVariantSelect = (index: number, variantId: string) => {
-    const selectedProduct = products?.find(
-      (p) => p.id === watchProducts[index].productId
-    );
-    const selectedVariant = selectedProduct?.variants.find(
-      (variant) => variant.id === variantId
-    );
-
-    if (selectedVariant) {
-      setSelectedSkus((prev) => ({ ...prev, [index]: selectedVariant.skus }));
-    }
-
-    setValue(`products.${index}.variantId`, variantId);
-    setValue(`products.${index}.skuId`, "");
-  };
-
-  const handleSkuSelect = (index: number, skuId: string) => {
-    setValue(`products.${index}.skuId`, skuId);
-    const selectedSku = selectedSkus[index]?.find((sku) => sku.id === skuId);
-    setValue(`products.${index}.stock`, selectedSku?.stockQuantity || 0);
-  };
-
-  const calculateTotal = () => {
-    return watchProducts
-      .reduce(
+    const calculateTotal = () => {
+      const total = watchProducts.reduce(
         (acc, item) =>
           acc + Number(item.price || 0) * Number(item.quantity || 0),
         0
-      )
-      .toFixed(2);
-  };
+      ).toFixed(2);
+      setTotalAmount(total);
+    };
 
-  const isFormComplete = () => {
-    return (
-      watchProducts.length > 0 &&
-      watchProducts.every(
-        (product) =>
-          Number(product.price) > 0 &&
-          Number(product.quantity) > 0 &&
-          product.variantId &&
-          product.skuId
-      ) &&
-      !!watch("status") &&
-      !!watch("type") &&
-      !!watchAccountId
-    );
-  };
+    calculateTotal();
+  }, [watchProducts]);
+
+  // Automatically update cash/digital to match total
+  useEffect(() => {
+    if (watchCashAmount) {
+      const remainingDigitalAmount = (Number(totalAmount) - Number(watchCashAmount)).toFixed(2);
+      setValue("digitalAmount", Number(remainingDigitalAmount));
+    } else if (watchDigitalAmount) {
+      const remainingCashAmount = (Number(totalAmount) - Number(watchDigitalAmount)).toFixed(2);
+      setValue("cashAmount",Number(remainingCashAmount));
+    }
+  }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const outOfStockItems = data.products.filter(
@@ -293,8 +213,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
         quantity: Number(item.quantity),
       })),
       status: data.status,
-      type: data.type,
+      type: "both", // Always set type to "both"
       accountId: data.accountId,
+      cashAmount: Number(data.cashAmount), // Ensure number conversion
+      digitalAmount: Number(data.digitalAmount), // Ensure number conversion
     };
 
     setLoading(true);
@@ -321,14 +243,36 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   return (
     <div className="container mx-auto my-10 p-6 bg-white rounded-md shadow-lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-         {/* Product Selection */}
-         <div className="space-y-2">
+        {/* Product Selection */}
+        <div className="space-y-2">
           <label className="block text-gray-700 font-semibold">
             Add Product
           </label>
           <Select
-            options={productOptions}
-            onChange={handleProductSelect}
+            options={products?.map((product) => ({
+              value: product.id,
+              label: `${product.name} (${product.stockQuantity} Pcs)`,
+              product,
+            }))}
+            onChange={(selectedOption) => {
+              if (selectedOption) {
+                const product = selectedOption.product;
+                const productIndex = fields.length;
+
+                append({
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price,
+                  quantity: 1,
+                  stock: product.stockQuantity,
+                });
+
+                setSelectedVariants((prev) => ({
+                  ...prev,
+                  [productIndex]: product.variants,
+                }));
+              }
+            }}
             placeholder="Select a product..."
             isClearable
           />
@@ -382,7 +326,12 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                         {...register(`products.${index}.variantId` as const)}
                         className="border border-gray-300 p-2 rounded-md w-full"
                         onChange={(e) =>
-                          handleVariantSelect(index, e.target.value)
+                          setSelectedSkus((prev) => ({
+                            ...prev,
+                            [index]: selectedProduct?.variants.find(
+                              (v) => v.id === e.target.value
+                            )?.skus ?? [],
+                          }))
                         }
                         value={watchProducts[index]?.variantId || ""}
                       >
@@ -400,7 +349,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                       <select
                         {...register(`products.${index}.skuId` as const)}
                         className="border border-gray-300 p-2 rounded-md w-full"
-                        onChange={(e) => handleSkuSelect(index, e.target.value)}
                         value={watchProducts[index]?.skuId || ""}
                       >
                         <option value="">Select SKU</option>
@@ -419,12 +367,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                         type="number"
                         className="border border-gray-300 p-2 rounded-md w-full"
                         value={watchProducts[index]?.price || ""}
-                        onChange={(e) =>
-                          setValue(
-                            `products.${index}.price`,
-                            parseFloat(e.target.value)
-                          )
-                        }
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
                       />
                     </td>
@@ -436,12 +378,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                         type="number"
                         className="border border-gray-300 p-2 rounded-md w-full"
                         value={watchProducts[index]?.quantity || ""}
-                        onChange={(e) =>
-                          setValue(
-                            `products.${index}.quantity`,
-                            parseInt(e.target.value)
-                          )
-                        }
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
                       />
                     </td>
@@ -481,90 +417,58 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           <select
             {...register("accountId")}
             className="border border-gray-300 p-2 rounded-md w-full"
-            value={watchAccountId}
-            onChange={(e) => {
-              setValue("accountId", e.target.value);
-            }}
           >
-            {accounts && accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.account} {account.default ? "(Default)" : ""}
-              </option>
-            ))}
+            {accounts &&
+              accounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.account} {account.default ? "(Default)" : ""}
+                </option>
+              ))}
           </select>
         </div>
 
-        {/* Payment Type Selection */}
-        <div className="space-y-2">
-          <label className="block text-gray-700 font-semibold">
-            Payment Type
-          </label>
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                {...register("type")}
-                value={Type.cash}
-                className="form-radio"
-              />
-              <span>Cash</span>
+        {/* Conditional Inputs for Cash and Digital Amounts */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-gray-700 font-semibold">
+              Cash Amount
             </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                {...register("type")}
-                value={Type.digital}
-                className="form-radio"
-              />
-              {/* Conditional rendering for payment method based on selected account currency */}
-              <span>
-                {(accounts ?? []).find((account) => account.id === watchAccountId)?.account === "KES"
-                  ? "mPesa"
-                  : "EVC"}
-              </span>
-            </label>
+            <input
+              type="number"
+              {...register("cashAmount", {
+                required: true,
+              })}
+              className="border border-gray-300 p-2 rounded-md w-full"
+              placeholder="Enter cash amount"
+              onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+            />
           </div>
-        </div>
-
-        {/* Status */}
-        <div className="space-y-2">
-          <label className="block text-gray-700 font-semibold">
-            Order Status
-          </label>
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                {...register("status")}
-                value="paid"
-                className="form-radio"
-              />
-              <span>Completed</span>
+          <div>
+            <label className="block text-gray-700 font-semibold">
+              Digital Amount
             </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                {...register("status")}
-                value="pending"
-                className="form-radio"
-              />
-              <span>Pending</span>
-            </label>
+            <input
+              type="number"
+              {...register("digitalAmount", {
+                required: true,
+              })}
+              className="border border-gray-300 p-2 rounded-md w-full"
+              placeholder="Enter digital amount"
+              onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+            />
           </div>
         </div>
 
         {/* Total Calculation */}
         <div className="text-right">
-          <p className="text-lg font-semibold">
-            Subtotal: {calculateTotal()}
-          </p>
+          <p className="text-lg font-semibold">Subtotal: {totalAmount}</p>
         </div>
 
         {/* Submit Button */}
         <Button
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md"
-          disabled={loading || !isFormComplete()}
+          disabled={loading || !isValid}
         >
           {loading ? (
             <>

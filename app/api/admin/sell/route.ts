@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const { items, accountId, type } = body;
+  const { items, accountId, type, cashAmount, digitalAmount } = body;
 
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: "Items are required" }, { status: 400 });
@@ -61,10 +61,9 @@ export async function POST(request: NextRequest) {
 
   while (attempt < MAX_RETRIES && !success) {
     try {
-      // Start the transaction and configure timeout
+      // Start the transaction
       newSell = await prisma.$transaction(
         async (transactionPrisma) => {
-          // Process items sequentially
           for (const item of items) {
             const sku = await transactionPrisma.sKU.findUnique({
               where: { id: item.skuId },
@@ -88,7 +87,6 @@ export async function POST(request: NextRequest) {
               throw new Error(`Quantity must be greater than 0.`);
             }
 
-            // Decrement the SKU stock quantity
             await transactionPrisma.sKU.update({
               where: { id: item.skuId },
               data: {
@@ -98,7 +96,6 @@ export async function POST(request: NextRequest) {
               },
             });
 
-            // Recalculate the total stock quantity for the product
             const updatedSkus = await transactionPrisma.sKU.findMany({
               where: { variant: { productId: item.productId } },
               select: { stockQuantity: true },
@@ -109,7 +106,6 @@ export async function POST(request: NextRequest) {
               0
             );
 
-            // Update the product's stock quantity
             await transactionPrisma.product.update({
               where: { id: item.productId },
               data: { stockQuantity: totalStockQuantity },
@@ -122,40 +118,58 @@ export async function POST(request: NextRequest) {
             0
           );
 
-          // After updating stock, create the sell record
+          // Validate the cash and digital amounts if the type is 'both'
+          if (type === "both") {
+            const cashAmt = parseFloat(cashAmount);
+            const digitalAmt = parseFloat(digitalAmount);
+          
+            if (isNaN(cashAmt) || isNaN(digitalAmt)) {
+              throw new Error("Cash amount and digital amount must be valid numbers.");
+            }
+          
+            if (cashAmt <= 0 && digitalAmt <= 0) {
+              throw new Error(
+                "At least one of cashAmount or digitalAmount must be greater than zero for 'both' type transactions."
+              );
+            }
+          }
+
+          // Create the sell record
           const createdSell = await transactionPrisma.sell.create({
             data: {
               userId: userId,
               total: totalAmount,
+              cashAmount: type === "both" ? cashAmount : undefined,
+              digitalAmount: type === "both" ? digitalAmount : undefined,
               discount: 0,
               type: type,
               status: body.status || "pending",
-              accountId: accountId, // Use provided accountId
+              accountId: accountId,
               items: {
                 create: items.map((item) => ({
                   productId: item.productId,
                   price: item.price,
                   quantity: item.quantity,
-                  skuId: item.skuId, // Add skuId to SellItem
+                  skuId: item.skuId,
                 })),
               },
             },
             include: { items: true },
           });
 
-          // Adjust the account balance
+          // Adjust the account balance based on the type of payment
           let newBalance = account.balance;
           let newCashBalance = account.cashBalance;
 
           if (type === "cash") {
-            // For cash sales, adjust the cash balance
             newCashBalance += totalAmount;
-          } else {
-            // For digital sales, adjust the digital balance
+          } else if (type === "digital") {
             newBalance += totalAmount;
+          } else if (type === "both") {
+            newCashBalance += cashAmount;
+            newBalance += digitalAmount;
           }
 
-          // Update the account balances
           await transactionPrisma.accounts.update({
             where: { id: accountId },
             data: {
@@ -167,12 +181,12 @@ export async function POST(request: NextRequest) {
           return createdSell;
         },
         {
-          maxWait: 15000, // Increase wait time to 15 seconds (default is 2000 ms)
-          timeout: 30000, // Increase transaction timeout to 30 seconds (default is 5000 ms)
+          maxWait: 15000,
+          timeout: 30000,
         }
       );
 
-      success = true; // Transaction was successful
+      success = true;
     } catch (error: any) {
       attempt++;
       console.error("Transaction failed, retrying...", error);
@@ -190,6 +204,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(newSell, { status: 200 });
 }
+
+
+
 
 // Handle GET request to retrieve sell records
 export async function GET(request: NextRequest) {

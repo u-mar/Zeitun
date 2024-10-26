@@ -123,6 +123,8 @@ model Sell {
   items      SellItem[]
   total      Float
   type       Type
+  cashAmount Float?
+  digitalAmount Float?
   status     String     @default("pending")
   discount   Float
   customerId String?    @db.ObjectId
@@ -136,6 +138,7 @@ model Sell {
 enum Type {
   cash
   digital
+  both
 }
 
 model Customer {

@@ -33,7 +33,7 @@ export async function PATCH(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const { items, accountId, type } = body;
+  const { items, accountId, type, cashAmount, digitalAmount } = body;
 
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: "Items are required" }, { status: 400 });
@@ -50,16 +50,72 @@ export async function PATCH(
     return NextResponse.json({ error: "Type is required" }, { status: 400 });
   }
 
+  // Ensure cashAmount and digitalAmount are numbers if type is 'both'
+  let cashAmt = 0;
+  let digitalAmt = 0;
+
+  if (type === "both") {
+    if (cashAmount === undefined || digitalAmount === undefined) {
+      return NextResponse.json(
+        {
+          error:
+            "Both cash and digital amounts must be provided for 'both' type.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Convert to numbers and validate
+    cashAmt = Number(cashAmount);
+    digitalAmt = Number(digitalAmount);
+
+    if (isNaN(cashAmt) || isNaN(digitalAmt)) {
+      return NextResponse.json(
+        { error: "Cash and digital amounts must be valid numbers." },
+        { status: 400 }
+      );
+    }
+  }
+
   let attempt = 0;
   let success = false;
   let updatedSell;
 
+  // Adjust balances based on the change in type and amounts
+  const adjustBalances = (
+    oldType: "cash" | "digital" | "both",
+    newType: "cash" | "digital" | "both",
+    oldCashAmount: number,
+    oldDigitalAmount: number,
+    newCashAmount: number,
+    newDigitalAmount: number,
+    account: any
+  ) => {
+    // Reverse old amounts first
+    if (oldType === "cash") {
+      account.cashBalance -= oldCashAmount;
+    } else if (oldType === "digital") {
+      account.balance -= oldDigitalAmount;
+    } else if (oldType === "both") {
+      account.cashBalance -= oldCashAmount;
+      account.balance -= oldDigitalAmount;
+    }
+
+    // Apply new amounts
+    if (newType === "cash") {
+      account.cashBalance += newCashAmount;
+    } else if (newType === "digital") {
+      account.balance += newDigitalAmount;
+    } else if (newType === "both") {
+      account.cashBalance += newCashAmount;
+      account.balance += newDigitalAmount;
+    }
+  };
+
   while (attempt < MAX_RETRIES && !success) {
     try {
-      // Start the transaction and configure timeout
       updatedSell = await prisma.$transaction(
         async (transactionPrisma) => {
-          // Fetch the existing sale with account and type
           const existingSell = await transactionPrisma.sell.findUnique({
             where: { id: params.id },
             include: { items: true },
@@ -70,8 +126,9 @@ export async function PATCH(
           }
 
           const oldAccountId = existingSell.accountId;
-          const oldTotal = existingSell.total;
           const oldType = existingSell.type;
+          const oldCashAmount = existingSell.cashAmount || 0;
+          const oldDigitalAmount = existingSell.digitalAmount || 0;
 
           // Reverse stock quantities for existing items
           for (const existingItem of existingSell.items) {
@@ -92,23 +149,13 @@ export async function PATCH(
 
           // Process each new item in the updated sale
           for (const item of items) {
-            // Ensure the quantity is greater than zero
-            if (item.quantity === 0) {
-              throw new Error(`Quantity must be greater than 0.`);
-            }
-
-            // Check SKU stock availability
             const sku = await transactionPrisma.sKU.findUnique({
               where: { id: item.skuId },
             });
 
-            if (!sku) {
-              throw new Error(`SKU with ID ${item.skuId} not found`);
-            }
-
-            if (sku.stockQuantity < item.quantity) {
+            if (!sku || sku.stockQuantity < item.quantity) {
               throw new Error(
-                `Not enough stock for SKU ${sku.sku}. Available: ${sku.stockQuantity}, Requested: ${item.quantity}.`
+                `Not enough stock for SKU ${sku?.sku || item.skuId}.`
               );
             }
 
@@ -120,23 +167,6 @@ export async function PATCH(
                   decrement: item.quantity,
                 },
               },
-            });
-
-            // Recalculate the total stock quantity for the product
-            const updatedSkus = await transactionPrisma.sKU.findMany({
-              where: { variant: { productId: item.productId } },
-              select: { stockQuantity: true },
-            });
-
-            const totalStockQuantity = updatedSkus.reduce(
-              (total, sku) => total + sku.stockQuantity,
-              0
-            );
-
-            // Update the product's stock quantity
-            await transactionPrisma.product.update({
-              where: { id: item.productId },
-              data: { stockQuantity: totalStockQuantity },
             });
           }
 
@@ -154,7 +184,9 @@ export async function PATCH(
               total: newTotal,
               discount: 0,
               type: type,
-              status: body.status,
+              cashAmount: type === "both" ? cashAmt : undefined,
+              digitalAmount: type === "both" ? digitalAmt : undefined,
+              status: body.status || "pending", // Default to 'pending' if status is missing
               items: {
                 create: items.map((item) => ({
                   productId: item.productId,
@@ -167,103 +199,52 @@ export async function PATCH(
             include: { items: true }, // Include associated items in the response
           });
 
-          // Adjust the account balances
           // Fetch old account
           const oldAccount = await transactionPrisma.accounts.findUnique({
             where: { id: oldAccountId },
           });
 
-          if (!oldAccount) {
-            throw new Error(`Old account with ID ${oldAccountId} not found`);
+          const newAccount =
+            accountId !== oldAccountId
+              ? await transactionPrisma.accounts.findUnique({
+                  where: { id: accountId },
+                })
+              : oldAccount;
+
+          if (!newAccount) {
+            throw new Error(`New account with ID ${accountId} not found`);
           }
 
-          // Fetch new account if accountId has changed
-          let newAccount = oldAccount;
+          // Adjust balances based on type change or amount change
+          if (oldType !== type || oldCashAmount !== cashAmt || oldDigitalAmount !== digitalAmt) {
+            adjustBalances(
+              oldType,
+              type,
+              oldCashAmount,
+              oldDigitalAmount,
+              cashAmt,
+              digitalAmt,
+              newAccount
+            );
+          }
+
+          // Update the account balances in the database
+          if (oldAccount) {
+            await transactionPrisma.accounts.update({
+              where: { id: oldAccountId },
+              data: {
+                balance: oldAccount.balance,
+                cashBalance: oldAccount.cashBalance,
+              },
+            });
+          }
+
           if (accountId !== oldAccountId) {
-            const fetchedAccount = await transactionPrisma.accounts.findUnique({
-              where: { id: accountId },
-            });
-            if (!fetchedAccount) {
-              throw new Error(`New account with ID ${accountId} not found`);
-            }
-            newAccount = fetchedAccount;
-          }
-
-          let oldAccountBalance = oldAccount.balance;
-          let oldAccountCashBalance = oldAccount.cashBalance;
-
-          let newAccountBalance = newAccount.balance;
-          let newAccountCashBalance = newAccount.cashBalance;
-
-          if (accountId === oldAccountId) {
-            // Same account
-            if (type === oldType) {
-              // Same type
-              const amountDifference = newTotal - oldTotal;
-
-              if (type === "cash") {
-                // Adjust cash balance
-                oldAccountCashBalance += amountDifference;
-              } else {
-                // Adjust digital balance
-                oldAccountBalance += amountDifference;
-              }
-            } else {
-              // Different types
-              // Subtract oldTotal from oldType balance
-              if (oldType === "cash") {
-                oldAccountCashBalance -= oldTotal;
-              } else {
-                oldAccountBalance -= oldTotal;
-              }
-
-              // Add newTotal to newType balance
-              if (type === "cash") {
-                oldAccountCashBalance += newTotal;
-              } else {
-                oldAccountBalance += newTotal;
-              }
-            }
-
-            // Update the account balances
-            await transactionPrisma.accounts.update({
-              where: { id: oldAccountId },
-              data: {
-                balance: oldAccountBalance,
-                cashBalance: oldAccountCashBalance,
-              },
-            });
-          } else {
-            // Account has changed
-            // Subtract oldTotal from old account's oldType balance
-            if (oldType === "cash") {
-              oldAccountCashBalance -= oldTotal;
-            } else {
-              oldAccountBalance -= oldTotal;
-            }
-
-            // Update old account
-            await transactionPrisma.accounts.update({
-              where: { id: oldAccountId },
-              data: {
-                balance: oldAccountBalance,
-                cashBalance: oldAccountCashBalance,
-              },
-            });
-
-            // Add newTotal to new account's newType balance
-            if (type === "cash") {
-              newAccountCashBalance += newTotal;
-            } else {
-              newAccountBalance += newTotal;
-            }
-
-            // Update new account
             await transactionPrisma.accounts.update({
               where: { id: accountId },
               data: {
-                balance: newAccountBalance,
-                cashBalance: newAccountCashBalance,
+                balance: newAccount.balance,
+                cashBalance: newAccount.cashBalance,
               },
             });
           }
@@ -271,12 +252,12 @@ export async function PATCH(
           return updatedSell;
         },
         {
-          maxWait: 15000, // Increase wait time to 15 seconds (default is 2000 ms)
-          timeout: 30000, // Increase transaction timeout to 30 seconds (default is 5000 ms)
+          maxWait: 15000,
+          timeout: 30000,
         }
       );
 
-      success = true; // Transaction was successful
+      success = true;
     } catch (error: any) {
       attempt++;
       console.error("Transaction failed, retrying...", error);
@@ -294,6 +275,8 @@ export async function PATCH(
 
   return NextResponse.json(updatedSell, { status: 200 });
 }
+
+
 
 // DELETE Handler - Delete a sale
 export async function DELETE(
@@ -327,6 +310,8 @@ export async function DELETE(
           const accountId = existingSell.accountId;
           const type = existingSell.type;
           const totalAmount = existingSell.total;
+          const cashAmount = existingSell.cashAmount || 0;
+          const digitalAmount = existingSell.digitalAmount || 0;
 
           const account = await transactionPrisma.accounts.findUnique({
             where: { id: accountId },
@@ -336,16 +321,27 @@ export async function DELETE(
             throw new Error(`Account with ID ${accountId} not found`);
           }
 
+          // Adjust balances based on type
           let newBalance = account.balance;
           let newCashBalance = account.cashBalance;
 
           if (type === "cash") {
+            // If the sale was cash-only, reduce cash balance
             newCashBalance -= totalAmount;
-          } else {
+          } else if (type === "digital") {
+            // If the sale was digital-only, reduce digital balance
             newBalance -= totalAmount;
+          } else if (type === "both") {
+            // If the sale was both, reduce both cash and digital amounts accordingly
+            newCashBalance -= cashAmount;
+            newBalance -= digitalAmount;
           }
 
-          // Update the account
+          // Ensure balances do not go negative (if that's a requirement)
+          if (newCashBalance < 0) newCashBalance = 0;
+          if (newBalance < 0) newBalance = 0;
+
+          // Update the account with the adjusted balances
           await transactionPrisma.accounts.update({
             where: { id: accountId },
             data: {
@@ -372,12 +368,6 @@ export async function DELETE(
             }
 
             // Increment the SKU stock quantity
-            if (item.quantity === 0) {
-              throw new Error(
-                `Quantity for SKU ${sku.sku} must be greater than 0.`
-              );
-            }
-
             await transactionPrisma.sKU.update({
               where: { id: sku.id },
               data: {
@@ -408,6 +398,11 @@ export async function DELETE(
               data: { stockQuantity: totalStockQuantity },
             });
           }
+
+          // Delete the associated sell items
+          await transactionPrisma.sellItem.deleteMany({
+            where: { sellId: sellId },
+          });
 
           // Delete the sell and its associated items
           await transactionPrisma.sell.delete({
