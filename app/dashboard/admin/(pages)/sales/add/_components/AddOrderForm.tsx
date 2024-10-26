@@ -158,6 +158,21 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     retry: 3,
   });
 
+  useEffect(() => {
+    const subscription = watch((values) => {
+      const total = (values.products ?? []).reduce(
+        (acc, item) =>
+          acc + Number(item?.price || 0) * Number(item?.quantity || 0),
+        0
+      ).toFixed(2);
+      setTotalAmount(total);
+    });
+  
+    // Clean up the subscription when the component unmounts
+    return () => subscription.unsubscribe();
+  }, [watch, setTotalAmount]);
+  
+
   // Automatically select the default account
   useEffect(() => {
     if (!order && accounts && accounts.length > 0) {
@@ -168,18 +183,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     }
   }, [accounts, order, setValue]);
 
-  useEffect(() => {
-    const calculateTotal = () => {
-      const total = watchProducts.reduce(
-        (acc, item) =>
-          acc + Number(item.price || 0) * Number(item.quantity || 0),
-        0
-      ).toFixed(2);
-      setTotalAmount(total);
-    };
-
-    calculateTotal();
-  }, [watchProducts]);
+ 
 
   // Automatically update cash/digital to match total
   useEffect(() => {

@@ -169,17 +169,19 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   }, [accounts, order, setValue]);
 
   useEffect(() => {
-    const calculateTotal = () => {
-      const total = watchProducts.reduce(
+    const subscription = watch((values) => {
+      const total = (values.products ?? []).reduce(
         (acc, item) =>
-          acc + Number(item.price || 0) * Number(item.quantity || 0),
+          acc + Number(item?.price || 0) * Number(item?.quantity || 0),
         0
       ).toFixed(2);
       setTotalAmount(total);
-    };
-
-    calculateTotal();
-  }, [watchProducts]);
+    });
+  
+    // Clean up the subscription when the component unmounts
+    return () => subscription.unsubscribe();
+  }, [watch, setTotalAmount]);
+  
 
   // Automatically update cash/digital to match total
   useEffect(() => {
