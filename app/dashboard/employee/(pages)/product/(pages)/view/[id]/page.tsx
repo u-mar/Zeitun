@@ -31,7 +31,7 @@ const ProductViewPage = async ({ params }: { params: { id: string } }) => {
     product = null;
   }
   if (product == undefined) {
-    return <div>not found event</div>;
+    return <div>not found Product</div>;
   }
   return (
     <div>

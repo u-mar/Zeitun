@@ -84,13 +84,6 @@ interface FormValues {
   digitalAmount?: number;
 }
 
-// Option type for react-select
-interface ProductOption {
-  value: string;
-  label: string;
-  product: ProductWithVariants;
-}
-
 const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   const [selectedVariants, setSelectedVariants] = useState<{
     [key: number]: Variant[];
@@ -103,27 +96,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const handleVariantSelect = (index: number, variantId: string) => {
-    const selectedProduct = products?.find(
-      (p) => p.id === watchProducts[index].productId
-    );
-    const selectedVariant = selectedProduct?.variants.find(
-      (variant) => variant.id === variantId
-    );
-
-    if (selectedVariant) {
-      setSelectedSkus((prev) => ({ ...prev, [index]: selectedVariant.skus }));
-    }
-
-    setValue(`products.${index}.variantId`, variantId);
-    setValue(`products.${index}.skuId`, "");
-  };
-
-  const handleSkuSelect = (index: number, skuId: string) => {
-    setValue(`products.${index}.skuId`, skuId);
-    const selectedSku = selectedSkus[index]?.find((sku) => sku.id === skuId);
-    setValue(`products.${index}.stock`, selectedSku?.stockQuantity || 0);
-  };
   const {
     register,
     control,
@@ -134,28 +106,28 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   } = useForm<FormValues>({
     defaultValues: order
       ? {
-        products: order.items.map((item) => ({
-          id: item.id,
-          productId: item.productId,
-          name: item.product?.name || "",
-          variantId: item.sku.variantId,
-          skuId: item.skuId,
-          price: item.price,
-          quantity: item.quantity,
-          stock: item.sku.stockQuantity,
-        })),
-        status: order.status,
-        type: "both", // Set default type to "both"
-        accountId: order.accountId || "",
-        cashAmount: order.cashAmount || undefined,
-        digitalAmount: order.digitalAmount || undefined,
-      }
+          products: order.items.map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            name: item.product?.name || "",
+            variantId: item.sku.variantId,
+            skuId: item.skuId,
+            price: item.price,
+            quantity: item.quantity,
+            stock: item.sku.stockQuantity,
+          })),
+          status: order.status,
+          type: "both", // Set default type to "both"
+          accountId: order.accountId || "",
+          cashAmount: order.cashAmount || undefined,
+          digitalAmount: order.digitalAmount || undefined,
+        }
       : {
-        products: [],
-        status: "paid",
-        type: "both", // Default to "both"
-        accountId: "",
-      },
+          products: [],
+          status: "paid",
+          type: "both", // Default to "both"
+          accountId: "",
+        },
     mode: "onChange",
   });
 
@@ -195,6 +167,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       }
     }
   }, [accounts, order, setValue]);
+
   useEffect(() => {
     const calculateTotal = () => {
       const total = watchProducts.reduce(
@@ -218,6 +191,51 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       setValue("cashAmount", Number(remainingCashAmount));
     }
   }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
+
+  // Initialize selectedVariants and selectedSkus in edit mode
+  useEffect(() => {
+    if (order && products) {
+      order.items.forEach((item, index) => {
+        const product = item.product;
+        if (product) {
+          setSelectedVariants((prev) => ({
+            ...prev,
+            [index]: product.variants,
+          }));
+
+          const variant = product.variants.find(
+            (v) => v.id === item.sku.variantId
+          );
+
+          if (variant) {
+            setSelectedSkus((prev) => ({ ...prev, [index]: variant.skus }));
+          }
+        }
+      });
+    }
+  }, [order, products]);
+
+  const handleVariantSelect = (index: number, variantId: string) => {
+    const selectedProduct = products?.find(
+      (p) => p.id === watchProducts[index].productId
+    );
+    const selectedVariant = selectedProduct?.variants.find(
+      (variant) => variant.id === variantId
+    );
+
+    if (selectedVariant) {
+      setSelectedSkus((prev) => ({ ...prev, [index]: selectedVariant.skus }));
+    }
+
+    setValue(`products.${index}.variantId`, variantId);
+    setValue(`products.${index}.skuId`, "");
+  };
+
+  const handleSkuSelect = (index: number, skuId: string) => {
+    setValue(`products.${index}.skuId`, skuId);
+    const selectedSku = selectedSkus[index]?.find((sku) => sku.id === skuId);
+    setValue(`products.${index}.stock`, selectedSku?.stockQuantity || 0);
+  };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const outOfStockItems = data.products.filter(
@@ -281,7 +299,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           <Select
             options={products?.map((product) => ({
               value: product.id,
-              label: `${product.name} (${product.stockQuantity} Pcs)`,
+              label: `${product.name} (${product.variants.length} Variants)`,
               product,
             }))}
             onChange={(selectedOption) => {
@@ -302,14 +320,13 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                   [productIndex]: product.variants,
                 }));
 
-                // Clear the selected SKUs if a new product is selected
+                // Reset selected SKUs for the new product
                 setSelectedSkus((prev) => ({
                   ...prev,
-                  [productIndex]: [], // Reset the skus for the selected product
+                  [productIndex]: [],
                 }));
               }
             }}
-
             placeholder="Select a product..."
             isClearable
           />
@@ -332,7 +349,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             <tbody>
               {fields.map((field, index) => {
                 const selectedProduct = field.productId
-                  ? (products ?? []).find((p) => p.id === field.productId)
+                  ? products?.find((p) => p.id === field.productId)
                   : undefined;
                 const selectedVariant = selectedProduct?.variants.find(
                   (v) => v.id === watchProducts[index]?.variantId
@@ -462,8 +479,8 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           <select
             {...register("accountId", { required: true })}
             className="border border-gray-300 p-2 rounded-md w-full"
-            value={watch("accountId")} // This ensures the accountId value is bound correctly
-            onChange={(e) => setValue("accountId", e.target.value)} // This ensures value is captured
+            value={watch("accountId")} // Ensure accountId is bound correctly
+            onChange={(e) => setValue("accountId", e.target.value)} // Ensure value is captured
           >
             <option value="">Select an account</option> {/* Provide a default option */}
             {accounts?.map((account) => (
@@ -472,7 +489,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
               </option>
             ))}
           </select>
-
         </div>
 
         {/* Conditional Inputs for Cash and Digital Amounts */}

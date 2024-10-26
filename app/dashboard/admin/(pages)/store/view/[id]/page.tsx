@@ -46,7 +46,7 @@ const OrderViewPage = async ({ params }: { params: { id: string } }) => {
     order = null;
   }
   if (order == undefined) {
-    return <div>not found event</div>;
+    return <div>not found Account</div>;
   }
   return (
     <div>
