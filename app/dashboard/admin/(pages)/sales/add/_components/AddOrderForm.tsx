@@ -106,28 +106,28 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   } = useForm<FormValues>({
     defaultValues: order
       ? {
-          products: order.items.map((item) => ({
-            id: item.id,
-            productId: item.productId,
-            name: item.product?.name || "",
-            variantId: item.sku.variantId,
-            skuId: item.skuId,
-            price: item.price,
-            quantity: item.quantity,
-            stock: item.sku.stockQuantity,
-          })),
-          status: order.status,
-          type: "both", // Set default type to "both"
-          accountId: order.accountId || "",
-          cashAmount: order.cashAmount || undefined,
-          digitalAmount: order.digitalAmount || undefined,
-        }
+        products: order.items.map((item) => ({
+          id: item.id,
+          productId: item.productId,
+          name: item.product?.name || "",
+          variantId: item.sku.variantId,
+          skuId: item.skuId,
+          price: item.price,
+          quantity: item.quantity,
+          stock: item.sku.stockQuantity,
+        })),
+        status: order.status,
+        type: "both", // Set default type to "both"
+        accountId: order.accountId || "",
+        cashAmount: order.cashAmount || undefined,
+        digitalAmount: order.digitalAmount || undefined,
+      }
       : {
-          products: [],
-          status: "paid",
-          type: "both", // Default to "both"
-          accountId: "",
-        },
+        products: [],
+        status: "paid",
+        type: "both", // Default to "both"
+        accountId: "",
+      },
     mode: "onChange",
   });
 
@@ -250,10 +250,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       });
       return;
     }
-    if (Number(data.cashAmount) + Number(data.digitalAmount) !== Number(totalAmount)) {
+    if ((data.cashAmount ?? 0) + (data.digitalAmount ?? 0) !== Number(totalAmount)) {
       toast.error("Cash and digital amounts do not match the total amount.");
       return;
-          }
+    }
 
     const orderData = {
       items: data.products.map((item) => ({
