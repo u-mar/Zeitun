@@ -250,11 +250,22 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       });
       return;
     }
-    if ((data.cashAmount ?? 0) + (data.digitalAmount ?? 0) !== Number(totalAmount)) {
-      toast.error("Cash and digital amounts do not match the total amount.");
+    const totalAmountNumeric = Number(totalAmount);
+    const cashAmountNumeric = Number(data.cashAmount || 0);
+    const digitalAmountNumeric = Number(data.digitalAmount || 0);
+    
+    // Ensure neither cashAmount nor digitalAmount is greater than totalAmount
+    if (
+      cashAmountNumeric + digitalAmountNumeric !== totalAmountNumeric ||
+      cashAmountNumeric > totalAmountNumeric ||
+      digitalAmountNumeric > totalAmountNumeric
+    ) {
+      toast.error(
+        "Invalid amounts: The sum of cash and digital amounts must equal the total, and neither can exceed the total."
+      );
       return;
     }
-
+    
 
     const orderData = {
       items: data.products.map((item) => ({
