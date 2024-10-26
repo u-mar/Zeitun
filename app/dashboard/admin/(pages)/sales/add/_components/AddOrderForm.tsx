@@ -250,6 +250,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       });
       return;
     }
+    if (Number(data.cashAmount) + Number(data.digitalAmount) !== Number(totalAmount)) {
+      toast.error("Cash and digital amounts do not match the total amount.");
+      return;
+          }
 
     const orderData = {
       items: data.products.map((item) => ({
