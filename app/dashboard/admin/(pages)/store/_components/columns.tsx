@@ -6,11 +6,11 @@ import DeleteAlertDialog from "../../../../_components/DeleteAlertDialog";
 interface Account {
   id: string;
   no: number;
- account: string;
- balance: number;
- cashBalance: number;
- total: number;
- createdAt: Date;
+  account: string;
+  balance: number;
+  cashBalance: number;
+  total: number;
+  createdAt: Date;
 }
 
 export const columns: ColumnDef<Account>[] = [
@@ -27,7 +27,7 @@ export const columns: ColumnDef<Account>[] = [
   },
   {
     accessorKey: "balance",
-    header: "balance",
+    header: "mPesa balance",
     cell: ({ row }) => {
       return <span className="text-gray-700 font-semibold">{row.original.balance.toFixed(2)}</span>; // Format total price
     },
@@ -73,10 +73,10 @@ export const columns: ColumnDef<Account>[] = [
           </Link>
 
           {/* Edit Button */}
-          <Link href={`/dashboard/admin/store/edit/${account.id}`}>
-            <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-              Edit
-            </button>
+          <Link
+            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            href={`/dashboard/admin/store/edit/${account.id}`}>
+            Edit
           </Link>
 
           {/* Delete Button */}

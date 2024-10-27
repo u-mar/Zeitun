@@ -44,10 +44,9 @@ const DeleteAlertDialog = ({ id, type }: { id: string; type: string }) => {
       } else if (type === "transaction") {
         await axios.delete(`${API}/admin/transaction/${id}`);
         queryClient.invalidateQueries({ queryKey: [`transaction`] });
-      
       } else if (type === "store") {
         await axios.delete(`${API}/admin/account/${id}`);
-        queryClient.invalidateQueries({ queryKey: [`store`] });
+        queryClient.invalidateQueries({ queryKey: [`account`] });
       } else if (type === "transactionCategory") {
         await axios.delete(`${API}/admin/transaction/category/${id}`);
         queryClient.invalidateQueries({ queryKey: [`transactionCategory`] });

@@ -1,7 +1,7 @@
 "use client";
 import { transactionCategorySchema } from "@/app/validationSchema/transactionCategorySchema";
 import { z } from "zod";
-import React from "react";
+import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -24,6 +24,22 @@ import { TransactionCategory } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox"; // Import for Checkbox UI component
 
+// Handle Enter Key Press to navigate between fields
+const handleEnterPress = (
+  event: React.KeyboardEvent,
+  nextRef: React.RefObject<any> | null,
+  formSubmit?: () => void
+) => {
+  if (event.key === "Enter") {
+    event.preventDefault(); // Prevent form submission on Enter
+
+    if (nextRef && nextRef.current && typeof nextRef.current.focus === "function") {
+      nextRef.current.focus(); // Focus on the next input if nextRef is provided
+    } else if (formSubmit) {
+      formSubmit(); // Trigger form submission if there's no nextRef and a formSubmit callback exists
+    }
+  }
+};
 const TransactionCategoryForm = ({
   transactionCategory,
 }: {
@@ -40,6 +56,10 @@ const TransactionCategoryForm = ({
       isAdmin: transactionCategory?.isAdmin || false, // Correctly handling isAdmin field
     },
   });
+
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const descriptionRef = useRef<HTMLInputElement | null>(null);
+  const isAdminRef = useRef<HTMLInputElement | null>(null);
 
   const onSubmit = async (
     values: z.infer<typeof transactionCategorySchema>
@@ -94,6 +114,7 @@ const TransactionCategoryForm = ({
                       <Input
                         placeholder="Enter transaction Category name"
                         {...field}
+                        onKeyDown={(e) => handleEnterPress(e, descriptionRef)}
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </FormControl>
@@ -112,6 +133,13 @@ const TransactionCategoryForm = ({
                       <Input
                         placeholder="Enter a description"
                         {...field}
+                        ref={(e) => {
+                          field.ref(e);
+                          descriptionRef.current = e;
+                        }}
+                        onKeyDown={(e) =>
+                          handleEnterPress(e, isAdminRef)
+                        } // Set focus to next input
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </FormControl>
@@ -129,6 +157,10 @@ const TransactionCategoryForm = ({
                     <FormLabel className="text-gray-700">Admin Only</FormLabel>
                     <FormControl>
                       <Checkbox
+                      ref={(e) => {
+                        field.ref(e);
+                        isAdminRef.current = e as HTMLInputElement;
+                      }}
                         checked={field.value}
                         onCheckedChange={(checked) => field.onChange(checked)}
                       />

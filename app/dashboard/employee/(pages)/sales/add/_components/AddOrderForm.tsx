@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { API } from "@/lib/config";
@@ -177,11 +177,11 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       ).toFixed(2);
       setTotalAmount(total);
     });
-  
+
     // Clean up the subscription when the component unmounts
     return () => subscription.unsubscribe();
   }, [watch, setTotalAmount]);
-  
+
 
   // Automatically update cash/digital to match total
   useEffect(() => {
@@ -194,6 +194,29 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     }
   }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
 
+  // Input references for focus management
+  const productRef = useRef<any>(null);
+  const variantRef = useRef<any>(null);
+  const skuRef = useRef<any>(null);
+  const priceRef = useRef<HTMLInputElement | null>(null);
+  const quantityRef = useRef<HTMLInputElement | null>(null);
+  const accountRef = useRef<HTMLSelectElement | null>(null);
+  const cashRef = useRef<HTMLInputElement | null>(null);
+  const digitalRef = useRef<HTMLInputElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const handleEnterPress = (
+    event: React.KeyboardEvent,
+    currentRef: React.RefObject<any>,
+    nextRef: React.RefObject<any>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent form submission on Enter
+      if (nextRef.current) {
+        nextRef.current.focus(); // Focus on the next input
+      }
+    }
+  };
   // Initialize selectedVariants and selectedSkus in edit mode
   useEffect(() => {
     if (order && products) {
@@ -255,7 +278,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     const totalAmountNumeric = Number(totalAmount);
     const cashAmountNumeric = Number(data.cashAmount || 0);
     const digitalAmountNumeric = Number(data.digitalAmount || 0);
-    
+
     // Ensure neither cashAmount nor digitalAmount is greater than totalAmount
     if (
       cashAmountNumeric + digitalAmountNumeric !== totalAmountNumeric ||
@@ -267,7 +290,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       );
       return;
     }
-    
+
 
     const orderData = {
       items: data.products.map((item) => ({
@@ -315,6 +338,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             Add Product
           </label>
           <Select
+            ref={productRef}
             options={products?.map((product) => ({
               value: product.id,
               label: `${product.name} (${product.variants.length} Variants)`,
@@ -345,6 +369,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                 }));
               }
             }}
+            onKeyDown={(e) => handleEnterPress(e, productRef, variantRef)}
             placeholder="Select a product..."
             isClearable
           />
@@ -395,11 +420,15 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     {/* Variant */}
                     <td className="py-3 px-6 text-left">
                       <select
-                        {...register(`products.${index}.variantId` as const)}
+                        ref={(e) => {
+                          variantRef.current = e;
+                          register(`products.${index}.variantId` as const).ref(e);
+                        }}
                         className="border border-gray-300 p-2 rounded-md w-full"
                         onChange={(e) =>
                           handleVariantSelect(index, e.target.value)
                         }
+                        onKeyDown={(e) => handleEnterPress(e, variantRef, skuRef)}
                         value={watchProducts[index]?.variantId || ""}
                       >
                         <option value="">Select Variant</option>
@@ -414,9 +443,13 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     {/* SKU */}
                     <td className="py-3 px-6 text-left">
                       <select
-                        {...register(`products.${index}.skuId` as const)}
+                        ref={(e) => {
+                          skuRef.current = e;
+                          register(`products.${index}.skuId` as const).ref(e);
+                        }}
                         className="border border-gray-300 p-2 rounded-md w-full"
                         onChange={(e) => handleSkuSelect(index, e.target.value)}
+                        onKeyDown={(e) => handleEnterPress(e, skuRef, priceRef)}
                         value={watchProducts[index]?.skuId || ""}
                       >
                         <option value="">Select SKU</option>
@@ -431,7 +464,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     {/* Price */}
                     <td className="py-3 px-6 text-left">
                       <input
-                        {...register(`products.${index}.price` as const)}
+                        ref={(e) => {
+                          priceRef.current = e;
+                          register(`products.${index}.price` as const).ref(e);
+                        }}
                         type="number"
                         className="border border-gray-300 p-2 rounded-md w-full"
                         value={watchProducts[index]?.price || ""}
@@ -441,6 +477,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                             parseFloat(e.target.value)
                           )
                         }
+                        onKeyDown={(e) => handleEnterPress(e, priceRef, quantityRef)}
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
                       />
                     </td>
@@ -448,7 +485,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     {/* Quantity */}
                     <td className="py-3 px-6 text-left">
                       <input
-                        {...register(`products.${index}.quantity` as const)}
+                        ref={(e) => {
+                          quantityRef.current = e;
+                          register(`products.${index}.quantity` as const).ref(e);
+                        }}
                         type="number"
                         className="border border-gray-300 p-2 rounded-md w-full"
                         value={watchProducts[index]?.quantity || ""}
@@ -459,6 +499,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                           )
                         }
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                        onKeyDown={(e) => handleEnterPress(e, quantityRef, accountRef)}
                       />
                     </td>
 
@@ -495,10 +536,15 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             Select Account
           </label>
           <select
-            {...register("accountId", { required: true })}
+            ref={(e) => {
+              accountRef.current = e;
+              register("accountId", { required: true }).ref(e);
+            }}
             className="border border-gray-300 p-2 rounded-md w-full"
             value={watch("accountId")} // Ensure accountId is bound correctly
             onChange={(e) => setValue("accountId", e.target.value)} // Ensure value is captured
+            onKeyDown={(e) => handleEnterPress(e, accountRef, cashRef)}
+
           >
             <option value="">Select an account</option> {/* Provide a default option */}
             {accounts?.map((account) => (
@@ -517,12 +563,14 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             </label>
             <input
               type="number"
-              {...register("cashAmount", {
-                required: true,
-              })}
+              ref={(e) => {
+                cashRef.current = e;
+                register("cashAmount", { required: true }).ref(e);
+              }}
               className="border border-gray-300 p-2 rounded-md w-full"
               placeholder="Enter cash amount"
               onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+              onKeyDown={(e) => handleEnterPress(e, cashRef, digitalRef)}
             />
           </div>
           <div>
@@ -531,12 +579,14 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             </label>
             <input
               type="number"
-              {...register("digitalAmount", {
-                required: true,
-              })}
+              ref={(e) => {
+                digitalRef.current = e;
+                register("digitalAmount", { required: true }).ref(e);
+              }}
               className="border border-gray-300 p-2 rounded-md w-full"
               placeholder="Enter digital amount"
               onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+              onKeyDown={(e) => handleEnterPress(e, digitalRef, submitButtonRef)}
             />
           </div>
         </div>
@@ -549,6 +599,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
         {/* Submit Button */}
         <Button
           type="submit"
+          ref={submitButtonRef}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md"
           disabled={loading || !isValid}
         >

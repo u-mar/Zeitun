@@ -1,6 +1,6 @@
 "use client";
 import { z } from "zod";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -46,6 +46,25 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
     const eastAfricaDate = new Date(date.getTime() + offset);
     return eastAfricaDate.toISOString().slice(0, 19); // Remove the 'Z' at the end to avoid UTC
   };
+  const handleEnterPress = (
+    event: React.KeyboardEvent,
+    nextRef: React.RefObject<any>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent form submission on Enter
+      if (nextRef.current && typeof nextRef.current.focus === "function") {
+        nextRef.current.focus(); // Focus on the next input
+      }
+    }
+  };
+
+  const transactionAmountRef = useRef<HTMLInputElement | null>(null);
+  const transactionDetailsRef = useRef<HTMLTextAreaElement | null>(null);
+  const senderNameRef = useRef<HTMLInputElement | null>(null);
+  const senderPhoneRef = useRef<HTMLInputElement | null>(null);
+  const receiverNameRef = useRef<HTMLInputElement | null>(null);
+  const receiverPhoneRef = useRef<HTMLInputElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Initialize form with react-hook-form
   const form = useForm<z.infer<typeof transactionSchema>>({
@@ -133,13 +152,13 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
     try {
       const response = transaction
         ? await axios.patch(`${API}/admin/transaction/${transaction.id}`, {
-            ...values,
-            tranDate: formattedDate, // Ensure date is correctly formatted
-          })
+          ...values,
+          tranDate: formattedDate, // Ensure date is correctly formatted
+        })
         : await axios.post(`${API}/admin/transaction`, {
-            ...values,
-            tranDate: formattedDate, // Ensure date is correctly formatted
-          });
+          ...values,
+          tranDate: formattedDate, // Ensure date is correctly formatted
+        });
       queryClient.invalidateQueries({ queryKey: ["transaction"] });
       toast.success(
         `Successfully ${transaction ? "Updated" : "Created"} Transaction`
@@ -196,6 +215,17 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                           onChange={(e) =>
                             field.onChange(parseFloat(e.target.value) || 0)
                           }
+                          onKeyDown={(e) => {
+                            if (isExchange) {
+                              if (watchExchangeType === "withdrawal") {
+                                handleEnterPress(e, senderNameRef); // Focus on Sender Name
+                              } else {
+                                handleEnterPress(e, receiverNameRef); // Focus on Receiver Name
+                              }
+                            } else {
+                              handleEnterPress(e, transactionDetailsRef); // Focus on Transaction Details
+                            }
+                          }}
                           onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
                         />
                       </FormControl>
@@ -289,6 +319,8 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                                 type="text"
                                 placeholder="Enter sender's name"
                                 {...field}
+                                ref={senderNameRef}
+                                onKeyDown={(e) => handleEnterPress(e, senderPhoneRef)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -306,6 +338,8 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                                 type="tel"
                                 placeholder="Enter sender's phone number"
                                 {...field}
+                                ref={senderPhoneRef}
+                                onKeyDown={(e) => handleEnterPress(e, transactionDetailsRef)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -326,6 +360,8 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                                 type="text"
                                 placeholder="Enter receiver's name"
                                 {...field}
+                                ref={receiverNameRef}
+                                onKeyDown={(e) => handleEnterPress(e, receiverPhoneRef)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -343,6 +379,8 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                                 type="tel"
                                 placeholder="Enter receiver's phone number"
                                 {...field}
+                                ref={receiverPhoneRef}
+                                onKeyDown={(e) => handleEnterPress(e, transactionDetailsRef)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -414,6 +452,8 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                       <Textarea
                         placeholder="Enter transaction details"
                         {...field}
+                        ref={transactionDetailsRef}
+                        onKeyDown={(e) => handleEnterPress(e, submitButtonRef)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -444,6 +484,7 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
               {/* Submit Button */}
               <SubmitButtonWithContent
                 loading={form.formState.isSubmitting || loading}
+                ref={submitButtonRef}
               />
             </form>
           </Form>
@@ -457,19 +498,23 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
 export default AddTransactionForm;
 
 // Submit Button Component
-export const SubmitButtonWithContent = ({ loading }: { loading: boolean }) => {
-  if (loading) {
+export const SubmitButtonWithContent = React.forwardRef<HTMLButtonElement, { loading: boolean }>(
+  ({ loading }, ref) => {
+    if (loading) {
+      return (
+        <Button className="space-x-2 gap-x-1 bg-gray-400" disabled ref={ref}>
+          Submitting Transaction
+          <Loader2 className="animate-spin h-5 w-5 text-white mx-2" />
+        </Button>
+      );
+    }
+
     return (
-      <Button className="space-x-2 gap-x-1 bg-gray-400" disabled>
-        Submitting Transaction
-        <Loader2 className="animate-spin h-5 w-5 text-white mx-2" />
+      <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" ref={ref}>
+        Submit Transaction
       </Button>
     );
   }
+);
 
-  return (
-    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-      Submit Transaction
-    </Button>
-  );
-};
+SubmitButtonWithContent.displayName = "SubmitButtonWithContent";

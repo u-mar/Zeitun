@@ -16,12 +16,12 @@ export const columns: ColumnDef<Users>[] = [
     accessorKey: "name",
     header: ({ column }) => {
       return (
-          <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Name
-        <ArrowUpDown className="ml-2 h-4 w-4" />
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
@@ -50,21 +50,15 @@ export const columns: ColumnDef<Users>[] = [
 
       return (
         <div className="flex items-center space-x-2">
-        {/* View Button */}
-        <Link href={`/dashboard/admin/user/view/${user.id}`}>
-          <button className="px-3 py-1 border bg-gray-500 text-white border-gray-400 rounded hover:bg-gray-400">
-            View
-          </button>
-        </Link>
+          {/* View Button */}
 
-        {/* Edit Button */}
-        <Link href={`/dashboard/admin/user/edit/${user.id}`}>
-          <button className="px-3 py-1 border bg-green-600 border-gray-400 rounded hover:bg-green-500">
+          {/* Edit Button */}
+          <Link 
+className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"          href={`/dashboard/admin/user/edit/${user.id}`}>
             Edit
-          </button>
-        </Link>
-        {/* Delete Button */}
-        <DeleteAlertDialog  id={user.id} type="user"/>
+          </Link>
+          {/* Delete Button */}
+          <DeleteAlertDialog id={user.id} type="user" />
         </div>
       )
     }

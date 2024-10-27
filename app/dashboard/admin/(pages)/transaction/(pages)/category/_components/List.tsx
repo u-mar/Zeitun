@@ -27,12 +27,7 @@ const List = () => {
   return (
     <div className="my-4 space-y-4 sm:p-6 lg:p-2">
       <div className="flex justify-end">
-        <Button
-          variant={"default"}
-          onClick={() => router.push("/dashboard/admin/transaction/category/new")}
-        >
-
-        </Button>
+        
         <Link href={"/dashboard/admin/transaction/category/new"}>
           <Button variant={"default"}>
             New Transaction Category

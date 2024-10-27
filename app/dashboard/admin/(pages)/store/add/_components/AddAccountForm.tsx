@@ -1,6 +1,6 @@
 "use client";
 import { accountSchema } from "@/app/validationSchema/account";
-import React from "react";
+import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Accounts } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 
+// Handle Enter Key Press to navigate between fields
+const handleEnterPress = (
+  event: React.KeyboardEvent,
+  nextRef: React.RefObject<any>
+) => {
+  if (event.key === "Enter") {
+    event.preventDefault(); // Prevent form submission on Enter
+    if (nextRef.current && typeof nextRef.current.focus === "function") {
+      nextRef.current.focus(); // Focus on the next input
+    }
+  }
+};
+
 const AddAccountForm = ({ account }: { account?: Accounts }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -36,6 +49,11 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
       default: account?.default || false, // Added default value
     },
   });
+
+  const balanceRef = useRef<HTMLInputElement | null>(null);
+  const cashBalanceRef = useRef<HTMLInputElement | null>(null);
+  const defaultAccountRef = useRef<HTMLInputElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const onSubmit = async (values: z.infer<typeof accountSchema>) => {
     try {
@@ -74,6 +92,7 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                       <Input
                         placeholder="KES or USD"
                         {...field}
+                        onKeyDown={(e) => handleEnterPress(e, balanceRef)}
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 uppercase"
                       />
                     </FormControl>
@@ -94,10 +113,17 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                         type="number"
                         placeholder="Enter balance"
                         {...field}
+                        ref={(e) => {
+                          field.ref(e);
+                          balanceRef.current = e;
+                        }}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value) || 0)
                         }
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                        onKeyDown={(e) =>
+                          handleEnterPress(e, cashBalanceRef)
+                        } // Set focus to next input
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </FormControl>
@@ -118,10 +144,17 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                         type="number"
                         placeholder="Enter cash balance"
                         {...field}
+                        ref={(e) => {
+                          field.ref(e);
+                          cashBalanceRef.current = e;
+                        }}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value) || 0)
                         }
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                        onKeyDown={(e) =>
+                          handleEnterPress(e, defaultAccountRef)
+                        }
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </FormControl>
@@ -139,11 +172,15 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                     <FormControl>
                       <div className="flex items-center space-x-2">
                         <input
+                          ref={defaultAccountRef}
                           type="checkbox"
                           id="default"
                           checked={field.value}
                           onChange={field.onChange}
                           className="form-checkbox h-5 w-5 text-indigo-600"
+                          onKeyDown={(e) =>
+                            handleEnterPress(e, submitButtonRef)
+                          }
                         />
                         <FormLabel htmlFor="default" className="text-gray-700">
                           Set as default account
@@ -151,7 +188,8 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                       </div>
                     </FormControl>
                     <p className="text-sm text-gray-500 mt-1">
-                      If activated, this account will be used as default throughout the app.
+                      If activated, this account will be used as default
+                      throughout the app.
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -160,6 +198,7 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
 
               {/* Submit Button */}
               <SubmitButtonWithContent
+                ref={submitButtonRef}
                 loading={form.formState.isSubmitting}
                 isUpdate={!!account}
               />
@@ -174,28 +213,31 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
 
 export default AddAccountForm;
 
-export const SubmitButtonWithContent = ({
-  loading,
-  isUpdate,
-}: {
-  loading: boolean;
-  isUpdate: boolean;
-}) => {
-  if (loading) {
+export const SubmitButtonWithContent = React.forwardRef(
+  (
+    { loading, isUpdate }: { loading: boolean; isUpdate: boolean },
+    ref: React.Ref<HTMLButtonElement>
+  ) => {
+    if (loading) {
+      return (
+        <Button
+          ref={ref}
+          className="space-x-2 gap-x-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          {isUpdate ? "Updating " : "Registering "}
+          Account <Loader2 className="animate-spin h-5 w-5 text-white mx-2" />
+        </Button>
+      );
+    }
+
     return (
-      <Button className="space-x-2 gap-x-1 bg-indigo-600 hover:bg-indigo-700 text-white">
-        {isUpdate ? "Updating " : "Registering "}
-        Account <Loader2 className="animate-spin h-5 w-5 text-white mx-2" />
+      <Button
+        type="submit"
+        ref={ref}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+      >
+        {isUpdate ? "Update Account" : "Register Account"}
       </Button>
     );
   }
-
-  return (
-    <Button
-      type="submit"
-      className="bg-indigo-600 hover:bg-indigo-700 text-white"
-    >
-      {isUpdate ? "Update Account" : "Register Account"}
-    </Button>
-  );
-};
+);

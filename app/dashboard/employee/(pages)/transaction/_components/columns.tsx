@@ -163,10 +163,10 @@ export const columns: ColumnDef<Transaction>[] = [
           </Link>
 
           {/* Edit Button */}
-          <Link href={`/dashboard/employee/transaction/edit/${transaction.id}`}>
-            <button className="px-3 py-1 border border-gray-400 rounded hover:bg-gray-100">
-              Edit
-            </button>
+          <Link
+            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            href={`/dashboard/employee/transaction/edit/${transaction.id}`}>
+            Edit
           </Link>
           {/* Delete Button */}
           <DeleteAlertDialog id={transaction.id} type="transaction" />

@@ -1,6 +1,6 @@
 "use client";
 import { z } from "zod";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -71,6 +71,19 @@ const generateUniqueSKU = (productName: string, color: string, size: string) => 
   return sku;
 };
 
+// Handle Enter Key Press to navigate between fields
+const handleEnterPress = (
+  event: React.KeyboardEvent,
+  nextRef: React.RefObject<any>
+) => {
+  if (event.key === "Enter") {
+    event.preventDefault(); // Prevent form submission on Enter
+    if (nextRef.current && typeof nextRef.current.focus === "function") {
+      nextRef.current.focus(); // Focus on the next input
+    }
+  }
+};
+
 const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -98,6 +111,14 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
   });
 
   const { watch } = form;
+  const priceRef = useRef<HTMLInputElement | null>(null);
+  const categoryRef = useRef<HTMLInputElement | null>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+  const addVariantButtonRef = useRef<HTMLInputElement | null>(null);
+  const firstVariantSizeRef = useRef<HTMLInputElement | null>(null);
+  const firstVariantColorRef = useRef<HTMLInputElement | null>(null);
+  const firstVariantStockQuantityRef = useRef<HTMLInputElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Watch the entire form and log the current values in real time
   const formData = watch(); // This will re-render on every change
@@ -114,10 +135,10 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof productSchema>) => {
-  
+
     // Check if we are editing an existing product
     const isEditing = !!product;
-  
+
     // Iterate over the variants and their SKUs
     values.variants.forEach((variant) => {
       variant.skus.forEach((sku, index) => {
@@ -127,14 +148,14 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
         }
       });
     });
-  
-  
+
+
     setLoading(true);
     try {
       const response = isEditing
         ? await axios.patch(`${API}/admin/product/${product?.id}`, values)
         : await axios.post(`${API}/admin/product`, values);
-  
+
       queryClient.invalidateQueries({ queryKey: ["product"] });
       toast.success(`Successfully ${isEditing ? "Updated" : "Created"} Product`);
       router.push("/dashboard/admin/product");
@@ -145,7 +166,7 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <>
@@ -169,7 +190,8 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter product name" {...field} />
+                      <Input placeholder="Enter product name" {...field} onKeyDown={(e) => handleEnterPress(e, priceRef)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,6 +221,8 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value) || 0)
                         }
+                        ref={priceRef}
+                        onKeyDown={(e) => handleEnterPress(e, descriptionRef)} // Set focus to next input
                       />
                     </FormControl>
                     <FormMessage />
@@ -217,7 +241,8 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
                       <Textarea
                         placeholder="Enter product description"
                         {...field}
-                      />
+                        ref={descriptionRef}
+                         />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -244,6 +269,8 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
                             <Input
                               placeholder="Enter variant color"
                               {...field}
+                              ref={firstVariantColorRef}
+                              onKeyDown={(e) => handleEnterPress(e, firstVariantSizeRef)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -255,6 +282,8 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
                     <SKUsFieldArray
                       control={form.control}
                       variantIndex={variantIndex}
+                      firstVariantSizeRef={firstVariantSizeRef}
+                      firstVariantStockQuantityRef={firstVariantStockQuantityRef}
                       isEditing={!!product} // If product exists, we're editing
                     />
 
@@ -308,10 +337,14 @@ const SKUsFieldArray = ({
   control,
   variantIndex,
   isEditing,
+  firstVariantSizeRef,
+  firstVariantStockQuantityRef,
 }: {
   control: any;
   variantIndex: number;
   isEditing: boolean;
+  firstVariantSizeRef: React.RefObject<HTMLInputElement>;
+  firstVariantStockQuantityRef: React.RefObject<HTMLInputElement>;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -330,7 +363,8 @@ const SKUsFieldArray = ({
               <FormItem className="flex-1">
                 <FormLabel>Size</FormLabel>
                 <FormControl>
-                  <Input placeholder="Size" {...field} />
+                  <Input placeholder="Size" {...field} ref={firstVariantSizeRef}
+                    onKeyDown={(e) => handleEnterPress(e, firstVariantStockQuantityRef)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -376,6 +410,7 @@ const SKUsFieldArray = ({
                       field.onChange(parseFloat(e.target.value) || 0)
                     }
                     onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                    ref={firstVariantStockQuantityRef}
                   />
                 </FormControl>
                 <FormMessage />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { API } from "@/lib/config";
@@ -173,6 +173,29 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   }, [watch, setTotalAmount]);
   
 
+  // Input references for focus management
+  const productRef = useRef<any>(null);
+  const variantRef = useRef<any>(null);
+  const skuRef = useRef<any>(null);
+  const priceRef = useRef<HTMLInputElement | null>(null);
+  const quantityRef = useRef<HTMLInputElement | null>(null);
+  const accountRef = useRef<HTMLSelectElement | null>(null);
+  const cashRef = useRef<HTMLInputElement | null>(null);
+  const digitalRef = useRef<HTMLInputElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const handleEnterPress = (
+    event: React.KeyboardEvent,
+    currentRef: React.RefObject<any>,
+    nextRef: React.RefObject<any>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent form submission on Enter
+      if (nextRef.current) {
+        nextRef.current.focus(); // Focus on the next input
+      }
+    }
+  };
   // Automatically select the default account
   useEffect(() => {
     if (!order && accounts && accounts.length > 0) {
@@ -311,264 +334,290 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
 
   return (
     <div className="container mx-auto my-10 p-6 bg-white rounded-md shadow-lg">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Product Selection */}
-        <div className="space-y-2">
-          <label className="block text-gray-700 font-semibold">
-            Add Product
-          </label>
-          <Select
-            options={products?.map((product) => ({
-              value: product.id,
-              label: `${product.name} (${product.variants.length} Variants)`,
-              product,
-            }))}
-            onChange={(selectedOption) => {
-              if (selectedOption) {
-                const product = selectedOption.product;
-                const productIndex = fields.length;
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Product Selection */}
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-semibold">
+          Add Product
+        </label>
+        <Select
+        ref={productRef}
+          options={products?.map((product) => ({
+            value: product.id,
+            label: `${product.name} (${product.variants.length} Variants)`,
+            product,
+          }))}
+          onChange={(selectedOption) => {
+            if (selectedOption) {
+              const product = selectedOption.product;
+              const productIndex = fields.length;
 
-                append({
-                  productId: product.id,
-                  name: product.name,
-                  price: product.price,
-                  quantity: 1,
-                  stock: product.stockQuantity,
-                });
+              append({
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: 1,
+                stock: product.stockQuantity,
+              });
 
-                setSelectedVariants((prev) => ({
-                  ...prev,
-                  [productIndex]: product.variants,
-                }));
+              setSelectedVariants((prev) => ({
+                ...prev,
+                [productIndex]: product.variants,
+              }));
 
-                // Reset selected SKUs for the new product
-                setSelectedSkus((prev) => ({
-                  ...prev,
-                  [productIndex]: [],
-                }));
-              }
-            }}
-            placeholder="Select a product..."
-            isClearable
-          />
-        </div>
+              // Reset selected SKUs for the new product
+              setSelectedSkus((prev) => ({
+                ...prev,
+                [productIndex]: [],
+              }));
+            }
+          }}
+          onKeyDown={(e) => handleEnterPress(e, productRef, variantRef)}
+          placeholder="Select a product..."
+          isClearable
+        />
+      </div>
 
-        {/* Products Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="text-gray-600 uppercase text-sm leading-normal">
-                <th className="py-3 px-6 text-left">Product</th>
-                <th className="py-3 px-6 text-left">Variant</th>
-                <th className="py-3 px-6 text-left">SKU</th>
-                <th className="py-3 px-6 text-left">Price</th>
-                <th className="py-3 px-6 text-left">Quantity</th>
-                <th className="py-3 px-6 text-left">Total</th>
-                <th className="py-3 px-6 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map((field, index) => {
-                const selectedProduct = field.productId
-                  ? products?.find((p) => p.id === field.productId)
-                  : undefined;
-                const selectedVariant = selectedProduct?.variants.find(
-                  (v) => v.id === watchProducts[index]?.variantId
-                );
-                const selectedSKU = selectedVariant?.skus.find(
-                  (s) => s.id === watchProducts[index]?.skuId
-                );
+      {/* Products Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white">
+          <thead>
+            <tr className="text-gray-600 uppercase text-sm leading-normal">
+              <th className="py-3 px-6 text-left">Product</th>
+              <th className="py-3 px-6 text-left">Variant</th>
+              <th className="py-3 px-6 text-left">SKU</th>
+              <th className="py-3 px-6 text-left">Price</th>
+              <th className="py-3 px-6 text-left">Quantity</th>
+              <th className="py-3 px-6 text-left">Total</th>
+              <th className="py-3 px-6 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fields.map((field, index) => {
+              const selectedProduct = field.productId
+                ? products?.find((p) => p.id === field.productId)
+                : undefined;
+              const selectedVariant = selectedProduct?.variants.find(
+                (v) => v.id === watchProducts[index]?.variantId
+              );
+              const selectedSKU = selectedVariant?.skus.find(
+                (s) => s.id === watchProducts[index]?.skuId
+              );
 
-                return (
-                  <tr
-                    key={field.id}
-                    className="border-b border-gray-200 hover:bg-gray-100"
-                  >
-                    {/* Product Name */}
-                    <td className="py-3 px-6 text-left whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {field.name}
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          In stock: {watchProducts[index]?.stock ?? "N/A"}
-                        </span>
-                      </div>
-                    </td>
+              return (
+                <tr
+                  key={field.id}
+                  className="border-b border-gray-200 hover:bg-gray-100"
+                >
+                  {/* Product Name */}
+                  <td className="py-3 px-6 text-left whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {field.name}
+                      <br />
+                      <span className="text-xs text-gray-500">
+                        In stock: {watchProducts[index]?.stock ?? "N/A"}
+                      </span>
+                    </div>
+                  </td>
 
-                    {/* Variant */}
-                    <td className="py-3 px-6 text-left">
-                      <select
-                        {...register(`products.${index}.variantId` as const)}
-                        className="border border-gray-300 p-2 rounded-md w-full"
-                        onChange={(e) =>
-                          handleVariantSelect(index, e.target.value)
-                        }
-                        value={watchProducts[index]?.variantId || ""}
-                      >
-                        <option value="">Select Variant</option>
-                        {selectedVariants[index]?.map((variant) => (
-                          <option key={variant.id} value={variant.id}>
-                            {variant.color}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                  {/* Variant */}
+                  <td className="py-3 px-6 text-left">
+                    <select
+                    ref={(e) => {
+                      variantRef.current = e;
+                      register(`products.${index}.variantId` as const).ref(e);
+                    }}
+                      className="border border-gray-300 p-2 rounded-md w-full"
+                      onChange={(e) =>
+                        handleVariantSelect(index, e.target.value)
+                      }
+                      onKeyDown={(e) => handleEnterPress(e, variantRef, skuRef)}
+                      value={watchProducts[index]?.variantId || ""}
+                    >
+                      <option value="">Select Variant</option>
+                      {selectedVariants[index]?.map((variant) => (
+                        <option key={variant.id} value={variant.id}>
+                          {variant.color}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
 
-                    {/* SKU */}
-                    <td className="py-3 px-6 text-left">
-                      <select
-                        {...register(`products.${index}.skuId` as const)}
-                        className="border border-gray-300 p-2 rounded-md w-full"
-                        onChange={(e) => handleSkuSelect(index, e.target.value)}
-                        value={watchProducts[index]?.skuId || ""}
-                      >
-                        <option value="">Select SKU</option>
-                        {selectedSkus[index]?.map((sku) => (
-                          <option key={sku.id} value={sku.id}>
-                            {sku.size} ({sku.stockQuantity} Pcs)
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                  {/* SKU */}
+                  <td className="py-3 px-6 text-left">
+                    <select
+                    ref={(e) => {
+                      skuRef.current = e;
+                      register(`products.${index}.skuId` as const).ref(e);
+                    }}
+                      className="border border-gray-300 p-2 rounded-md w-full"
+                      onChange={(e) => handleSkuSelect(index, e.target.value)}
+                      onKeyDown={(e) => handleEnterPress(e, skuRef, priceRef)}
+                      value={watchProducts[index]?.skuId || ""}
+                    >
+                      <option value="">Select SKU</option>
+                      {selectedSkus[index]?.map((sku) => (
+                        <option key={sku.id} value={sku.id}>
+                          {sku.size} ({sku.stockQuantity} Pcs)
+                        </option>
+                      ))}
+                    </select>
+                  </td>
 
-                    {/* Price */}
-                    <td className="py-3 px-6 text-left">
-                      <input
-                        {...register(`products.${index}.price` as const)}
-                        type="number"
-                        className="border border-gray-300 p-2 rounded-md w-full"
-                        value={watchProducts[index]?.price || ""}
-                        onChange={(e) =>
-                          setValue(
-                            `products.${index}.price`,
-                            parseFloat(e.target.value)
-                          )
-                        }
-                        onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                  {/* Price */}
+                  <td className="py-3 px-6 text-left">
+                    <input
+                     ref={(e) => {
+                       priceRef.current = e;
+                       register(`products.${index}.price` as const).ref(e);
+                     }}
+                      type="number"
+                      className="border border-gray-300 p-2 rounded-md w-full"
+                      value={watchProducts[index]?.price || ""}
+                      onChange={(e) =>
+                        setValue(
+                          `products.${index}.price`,
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      onKeyDown={(e) => handleEnterPress(e, priceRef, quantityRef)}
+                      onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                    />
+                  </td>
+
+                  {/* Quantity */}
+                  <td className="py-3 px-6 text-left">
+                    <input
+                     ref={(e) => {
+                       quantityRef.current = e;
+                       register(`products.${index}.quantity` as const).ref(e);
+                     }}
+                      type="number"
+                      className="border border-gray-300 p-2 rounded-md w-full"
+                      value={watchProducts[index]?.quantity || ""}
+                      onChange={(e) =>
+                        setValue(
+                          `products.${index}.quantity`,
+                          parseInt(e.target.value)
+                        )
+                      }
+                      onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+                      onKeyDown={(e) => handleEnterPress(e, quantityRef, accountRef)}
                       />
-                    </td>
+                  </td>
 
-                    {/* Quantity */}
-                    <td className="py-3 px-6 text-left">
-                      <input
-                        {...register(`products.${index}.quantity` as const)}
-                        type="number"
-                        className="border border-gray-300 p-2 rounded-md w-full"
-                        value={watchProducts[index]?.quantity || ""}
-                        onChange={(e) =>
-                          setValue(
-                            `products.${index}.quantity`,
-                            parseInt(e.target.value)
-                          )
-                        }
-                        onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
-                      />
-                    </td>
+                  {/* Total */}
+                  <td className="py-3 px-6 text-left">
+                    <div className="text-sm text-gray-900">
+                      {(
+                        Number(watchProducts[index]?.price || 0) *
+                        Number(watchProducts[index]?.quantity || 0)
+                      ).toFixed(2)}{" "}
+                    </div>
+                  </td>
 
-                    {/* Total */}
-                    <td className="py-3 px-6 text-left">
-                      <div className="text-sm text-gray-900">
-                        {(
-                          Number(watchProducts[index]?.price || 0) *
-                          Number(watchProducts[index]?.quantity || 0)
-                        ).toFixed(2)}{" "}
-                      </div>
-                    </td>
+                  {/* Remove Button */}
+                  <td className="py-3 px-6 text-center">
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      ×
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-                    {/* Remove Button */}
-                    <td className="py-3 px-6 text-center">
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        ×
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      {/* Account Selection */}
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-semibold">
+          Select Account
+        </label>
+        <select
+        ref={(e) => {
+          accountRef.current = e;
+          register("accountId", { required: true }).ref(e);
+        }}
+          className="border border-gray-300 p-2 rounded-md w-full"
+          value={watch("accountId")} // Ensure accountId is bound correctly
+          onChange={(e) => setValue("accountId", e.target.value)} // Ensure value is captured
+          onKeyDown={(e) => handleEnterPress(e, accountRef, cashRef)}
 
-        {/* Account Selection */}
-        <div className="space-y-2">
-          <label className="block text-gray-700 font-semibold">
-            Select Account
-          </label>
-          <select
-            {...register("accountId", { required: true })}
-            className="border border-gray-300 p-2 rounded-md w-full"
-            value={watch("accountId")} // Ensure accountId is bound correctly
-            onChange={(e) => setValue("accountId", e.target.value)} // Ensure value is captured
-          >
-            <option value="">Select an account</option> {/* Provide a default option */}
-            {accounts?.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.account} {account.default ? "(Default)" : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Conditional Inputs for Cash and Digital Amounts */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-gray-700 font-semibold">
-              Cash Amount
-            </label>
-            <input
-              type="number"
-              {...register("cashAmount", {
-                required: true,
-              })}
-              className="border border-gray-300 p-2 rounded-md w-full"
-              placeholder="Enter cash amount"
-              onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-semibold">
-              Digital Amount
-            </label>
-            <input
-              type="number"
-              {...register("digitalAmount", {
-                required: true,
-              })}
-              className="border border-gray-300 p-2 rounded-md w-full"
-              placeholder="Enter digital amount"
-              onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
-            />
-          </div>
-        </div>
-
-        {/* Total Calculation */}
-        <div className="text-right">
-          <p className="text-lg font-semibold">Subtotal: {totalAmount}</p>
-        </div>
-
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md"
-          disabled={loading || !isValid}
         >
-          {loading ? (
-            <>
-              {order ? "Updating Order..." : "Creating Order..."}
-              <Loader2 className="animate-spin h-5 w-5 text-white mx-2" />
-            </>
-          ) : order ? (
-            "Update Order"
-          ) : (
-            "Create Order"
-          )}
-        </Button>
-      </form>
-      <Toaster />
-    </div>
+          <option value="">Select an account</option> {/* Provide a default option */}
+          {accounts?.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.account} {account.default ? "(Default)" : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Conditional Inputs for Cash and Digital Amounts */}
+      <div className="grid grid-cols-2 gap-4">
+  <div>
+    <label className="block text-gray-700 font-semibold">
+      Cash Amount
+    </label>
+    <input
+      type="number"
+      {...register("cashAmount", { required: true })} // Register with react-hook-form
+      className="border border-gray-300 p-2 rounded-md w-full"
+      placeholder="Enter cash amount"
+      onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+      onKeyDown={(e) => handleEnterPress(e, cashRef, digitalRef)} // Focus the digital amount field next
+    />
+  </div>
+  
+  {/* Digital Amount Input */}
+  <div>
+    <label className="block text-gray-700 font-semibold">
+      Digital Amount
+    </label>
+    <input
+      type="number"
+      {...register("digitalAmount", { required: true })} // Register with react-hook-form
+      className="border border-gray-300 p-2 rounded-md w-full"
+      placeholder="Enter digital amount"
+      onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
+      onKeyDown={(e) => handleEnterPress(e, digitalRef, submitButtonRef)} // Focus the submit button next
+    />
+  </div>
+</div>
+
+
+
+      {/* Total Calculation */}
+      <div className="text-right">
+        <p className="text-lg font-semibold">Subtotal: {totalAmount}</p>
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        ref={submitButtonRef}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md"
+        disabled={loading || !isValid}
+      >
+        {loading ? (
+          <>
+            {order ? "Updating Order..." : "Creating Order..."}
+            <Loader2 className="animate-spin h-5 w-5 text-white mx-2" />
+          </>
+        ) : order ? (
+          "Update Order"
+        ) : (
+          "Create Order"
+        )}
+      </Button>
+    </form>
+    <Toaster />
+  </div>
   );
 };
 
