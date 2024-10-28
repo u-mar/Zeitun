@@ -19,12 +19,14 @@ interface TransactionCategoryIdSelectProps {
 
 const TransactionCategoryIdSelect = ({ control }: TransactionCategoryIdSelectProps) => {
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const [loading, setLoading] = useState(true); // Add loading state to wait for accounts
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const { data } = await axios.get(`${API}/admin/transaction/category`);
         setCategories(data);
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching categories", err);
       }
@@ -32,13 +34,26 @@ const TransactionCategoryIdSelect = ({ control }: TransactionCategoryIdSelectPro
     fetchCategories();
   }, []);
 
+  if (loading) {
+    return (
+      <FormItem>
+        <FormLabel>Choose Transaction Category</FormLabel>
+        <Select>
+          <SelectTrigger>
+            <SelectValue placeholder="Loading categories..." />
+          </SelectTrigger>
+        </Select>
+      </FormItem>
+    );
+  
+  }
   return (
     <Controller
       control={control}
       name="categoryId" // This must match the form schema and form field name
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Choose TransactionCategory</FormLabel>
+          <FormLabel>Choose Transaction Category</FormLabel>
           <Select value={field.value} onValueChange={field.onChange}>
             <SelectTrigger>
               <SelectValue placeholder="Choose Transaction Category" />

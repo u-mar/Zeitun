@@ -55,12 +55,12 @@ export const columns: ColumnDef<Transaction>[] = [
     header: "Category",
   },
   {
-    accessorKey: "amount",
+    accessorKey: "account.account",
     header: "Amount",
     cell: ({ row }) => {
-      const amountType = row.original.amountType;
+      const amountType = row.original.account.account;
       const formattedAmount =
-        amountType === "USD"
+      amountType === "USD"
           ? `$${row.original.amount.toFixed(2)}`
           : row.original.amount.toFixed(2);
       return <span>{formattedAmount}</span>; // Format amount
