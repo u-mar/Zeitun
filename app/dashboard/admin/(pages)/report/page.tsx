@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import ReportForm from "./_components/ReportForm";
 import ReportResult from "./_components/ReportResult";
 import SalesReports from "./_components/SalesReport";
+import OrderReport from "./_components/OrderReport";
 
 const ReportPage = () => {
   const [reportData, setReportData] = useState(null);
@@ -18,7 +19,8 @@ const ReportPage = () => {
     //     {reportData && <ReportResult data={reportData} />}
     //   </div>
     // </div>
-    <SalesReports />
+    // <SalesReports />
+    <OrderReport />
   );
 };
 

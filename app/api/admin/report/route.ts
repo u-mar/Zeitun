@@ -1,233 +1,191 @@
-// app/api/report/route.ts
-import { NextResponse } from 'next/server';
-import prisma from '@/prisma/client';
-import {
-  startOfDay,
-  endOfDay,
-  startOfWeek,
-  endOfWeek,
-  startOfYear,
-  endOfYear,
-  startOfMonth,
-  endOfMonth,
-  subDays,
-  subWeeks,
-  subMonths,
-  parseISO,
-} from 'date-fns';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/prisma/client"; // Adjust the path to your prisma file
+import { productSchema } from "@/app/validationSchema/productSchema";
 
-interface ProductSale {
-  productName: string;
-  quantitySold: number;
-  totalAmount: number;
-}
-
-interface CategorySale {
-  categoryName: string;
-  quantitySold: number;
-  totalAmount: number;
-}
-
-function getDateRange(type: string, searchParams: URLSearchParams) {
-  const now = new Date();
-  let startDate: Date;
-  let endDate: Date;
-
-  switch (type) {
-    case 'today':
-      startDate = startOfDay(now);
-      endDate = endOfDay(now);
-      break;
-    case 'yesterday':
-      const yesterday = subDays(now, 1);
-      startDate = startOfDay(yesterday);
-      endDate = endOfDay(yesterday);
-      break;
-    case 'day':
-      const dateStr = searchParams.get('date');
-      if (!dateStr) {
-        throw new Error('Date parameter is required for day report');
-      }
-      const date = parseISO(dateStr);
-      startDate = startOfDay(date);
-      endDate = endOfDay(date);
-      break;
-    case 'week':
-      startDate = startOfWeek(now);
-      endDate = endOfWeek(now);
-      break;
-    case 'year':
-      startDate = startOfYear(now);
-      endDate = endOfYear(now);
-      break;
-    case 'yearX':
-      const yearStr = searchParams.get('year');
-      if (!yearStr) {
-        throw new Error('Year parameter is required for yearX report');
-      }
-      const year = parseInt(yearStr);
-      if (isNaN(year)) {
-        throw new Error('Invalid year parameter');
-      }
-      startDate = startOfYear(new Date(year, 0, 1));
-      endDate = endOfYear(new Date(year, 0, 1));
-      break;
-    case 'range':
-      const fromStr = searchParams.get('from');
-      const toStr = searchParams.get('to');
-      if (!fromStr || !toStr) {
-        throw new Error('From and To parameters are required for range report');
-      }
-      startDate = startOfDay(parseISO(fromStr));
-      endDate = endOfDay(parseISO(toStr));
-      break;
-    default:
-      throw new Error('Invalid report type');
+export async function POST(request: NextRequest) {
+  if (request.headers.get("content-length") === "0") {
+    return NextResponse.json(
+      { error: "You have to provide body information" },
+      { status: 400 }
+    );
   }
-  return { startDate, endDate };
+
+  const body = await request.json();
+
+  const validation = productSchema.safeParse(body);
+
+  if (!validation.success) {
+    return NextResponse.json(validation.error.format(), { status: 400 });
+  }
+
+  try {
+    return NextResponse.json("you cannot update anything", { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating product:", error);
+    return NextResponse.json(
+      { message: "Error registering product", error: error.message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const category = searchParams.get("category");
+  const product = searchParams.get("product");
+  const user = searchParams.get("user");
+  const dateRange = searchParams.get("dateRange");
+  const fromDate = searchParams.get("fromDate");
+  const toDate = searchParams.get("toDate");
+  const year = searchParams.get("year");
+  const month = searchParams.get("month");
+
+  let sellWhere: any = {}; // Filters for Sell model
+  let sellItemWhere: any = {}; // Filters for SellItem model
+
+  // Apply category filter
+  if (category !== "all") {
+    sellItemWhere.product = {
+      categoryId: category,
+    };
+  }
+
+  // Apply product filter
+  if (product !== "all") {
+    sellItemWhere.productId = product;
+  }
+
+  // Apply user filter
+  if (user !== "all") {
+    sellWhere.userId = user;
+  }
+
+  const currentDate = new Date();
+
+  // Handle 'today' filter
+  if (dateRange === "today") {
+    sellWhere.createdAt = {
+      gte: new Date(currentDate.setHours(0, 0, 0, 0)),
+      lt: new Date(currentDate.setHours(24, 0, 0, 0)), // End of the current day
+    };
+  }
+
+  // Handle 'yesterday' filter
+  if (dateRange === "yesterday") {
+    const yesterday = new Date();
+    yesterday.setDate(currentDate.getDate() - 1);
+    sellWhere.createdAt = {
+      gte: new Date(yesterday.setHours(0, 0, 0, 0)), // Start of yesterday
+      lt: new Date(currentDate.setHours(0, 0, 0, 0)), // Start of today
+    };
+  }
+
+  // Handle specific date range
+  if (dateRange === "specific-date" && fromDate && toDate) {
+    sellWhere.createdAt = {
+      gte: new Date(fromDate), // From the start of the selected fromDate
+      lt: new Date(new Date(toDate).setHours(23, 59, 59, 999)), // End of the selected toDate
+    };
+  }
+
+  // Handle specific year
+  if (dateRange === "specific-year" && year) {
+    const startOfYear = new Date(`${year}-01-01`);
+    const endOfYear = new Date(`${parseInt(year) + 1}-01-01`);
+    sellWhere.createdAt = {
+      gte: startOfYear,
+      lt: endOfYear,
+    };
+  }
+
+  // Handle specific month
+  if (dateRange === "specific-month" && month && year) {
+    const startOfMonth = new Date(`${year}-${month}-01`);
+    const endOfMonth = new Date(`${year}-${parseInt(month) + 1}-01`);
+    sellWhere.createdAt = {
+      gte: startOfMonth,
+      lt: endOfMonth,
+    };
+  }
+
+  // Handle the case of 'this-week'
+  if (dateRange === "this-week") {
+    const weekStart = new Date();
+    weekStart.setDate(currentDate.getDate() - currentDate.getDay()); // Get the start of the week (Sunday)
+    sellWhere.createdAt = {
+      gte: new Date(weekStart.setHours(0, 0, 0, 0)), // Start of the week
+      lt: new Date(currentDate.setHours(24, 0, 0, 0)), // End of today
+    };
+  }
+
+  // Handle 'this-month' filter
+  if (dateRange === "this-month") {
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    sellWhere.createdAt = {
+      gte: new Date(monthStart), // Start of the month
+      lt: new Date(new Date().setHours(24, 0, 0, 0)), // End of today
+    };
+  }
+
+  // Handle 'this-year' filter
+  if (dateRange === "this-year") {
+    const yearStart = new Date(currentDate.getFullYear(), 0, 1);
+    sellWhere.createdAt = {
+      gte: new Date(yearStart), // Start of the year
+      lt: new Date(new Date().setHours(24, 0, 0, 0)), // End of today
+    };
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'today';
-    const reportBy = searchParams.get('reportBy') || 'all'; // 'all', 'product', 'category'
-    const productName = searchParams.get('productName') || '';
-    const categoryName = searchParams.get('categoryName') || '';
-
-    const { startDate, endDate } = getDateRange(type, searchParams);
-
-    // Build where clause
-    let baseWhereClause: any = {
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    };
-
-    if (reportBy === 'product' && productName) {
-      const productFilter = {
+    // Fetch sales with the filters applied
+    const sells = await prisma.sell.findMany({
+      where: {
+        ...sellWhere,
         items: {
           some: {
-            sku: {
-              variant: {
-                product: {
-                  name: {
-                    equals: productName,
-                    mode: 'insensitive',
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      baseWhereClause = { ...baseWhereClause, ...productFilter };
-    }
-
-    if (reportBy === 'category' && categoryName) {
-      const categoryFilter = {
-        items: {
-          some: {
-            sku: {
-              variant: {
-                product: {
-                  category: {
-                    name: {
-                      equals: categoryName,
-                      mode: 'insensitive',
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-
-      baseWhereClause = { ...baseWhereClause, ...categoryFilter };
-    }
-
-    // Include relations
-    const includeRelations = {
-      items: {
-        include: {
-          sku: {
-            include: {
-              variant: {
-                include: {
-                  product: {
-                    include: {
-                      category: true,
-                    },
-                  },
-                },
-              },
-            },
+            ...sellItemWhere,
           },
         },
       },
-      customer: true,
-    };
-
-    // Query the database for current sales
-    const sales = await prisma.sell.findMany({
-      where: baseWhereClause,
-      include: includeRelations,
+      include: {
+        items: true,
+      },
     });
 
-    // Process sales data
-    let totalSalesAmount = 0;
-    let totalItemsSold = 0;
-    let productSales: { [key: string]: ProductSale } = {};
-    let categorySales: { [key: string]: CategorySale } = {};
+    // Calculate totals
+    const cashAmount = sells.reduce(
+      (sum, sell) => sum + (sell.cashAmount || 0),
+      0
+    );
+    const digitalAmount = sells.reduce(
+      (sum, sell) => sum + (sell.digitalAmount || 0),
+      0
+    );
+    const totalAmount = cashAmount + digitalAmount;
 
-    for (const sale of sales) {
-      totalSalesAmount += sale.total;
-      for (const item of sale.items) {
-        totalItemsSold += item.quantity;
-        const productId = item.sku.variant.product.id;
-        const productName = item.sku.variant.product.name;
-        const categoryId = item.sku.variant.product.category.id;
-        const categoryName = item.sku.variant.product.category.name;
+    // Count orders and items
+    const orderCount = sells.length;
+    const quantityCount = sells.reduce((totalItems, sell) => {
+        return totalItems + sell.items.reduce((sum, item) => sum + item.quantity, 0);
+      }, 0);
+      
 
-        // Product Sales
-        if (!productSales[productId]) {
-          productSales[productId] = {
-            productName,
-            quantitySold: 0,
-            totalAmount: 0,
-          };
-        }
-        productSales[productId].quantitySold += item.quantity;
-        productSales[productId].totalAmount += item.price * item.quantity;
-
-        // Category Sales
-        if (!categorySales[categoryId]) {
-          categorySales[categoryId] = {
-            categoryName,
-            quantitySold: 0,
-            totalAmount: 0,
-          };
-        }
-        categorySales[categoryId].quantitySold += item.quantity;
-        categorySales[categoryId].totalAmount += item.price * item.quantity;
-      }
-    }
-
-    const report = {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      totalSalesAmount,
-      totalItemsSold,
-      productSales: Object.values(productSales),
-      categorySales: Object.values(categorySales),
-      reportBy, // Include reportBy in the report data
-    };
-
-    return NextResponse.json({ report });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({
+      cashAmount,
+      digitalAmount,
+      totalAmount,
+      orderCount,
+      quantityCount,
+      selectedCategory: category === "all" ? "All Categories" : category,
+      selectedProduct: product === "all" ? "All Products" : product,
+      selectedUser: user === "all" ? "All Users" : user,
+    });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { error: "Error fetching report data." },
+      { status: 500 }
+    );
   }
 }
+

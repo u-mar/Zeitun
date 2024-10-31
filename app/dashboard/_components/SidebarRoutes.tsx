@@ -18,7 +18,6 @@ import LogoutDialog from "./LogoutDialog";
 import { COMPANY_NAME } from "@/lib/config";
 
 
-
 const adminRoutes = [
   {
     title: "DISCOVER",
@@ -60,8 +59,17 @@ const adminRoutes = [
       },
       {
         name: "Report",
-        path: "/dashboard/admin/report",
         icon: BarChart2,
+        subItems: [ // Add sub-items directly within the route
+          {
+            name: "Orders Report",
+            path: "/dashboard/admin/report",
+          },
+          // {
+          //   name: "Transactions Report",
+          //   path: "/dashboard/admin/report/transaction",
+          // },
+        ],
       },
       {
         name: "Store",
@@ -86,6 +94,7 @@ const adminRoutes = [
     ],
   },
 ];
+
 
 const employeeRoutes = [
   {
@@ -134,8 +143,10 @@ const employeeRoutes = [
   },
 ];
 
+
 const SidebarRoutes = ({ role }: { role: string }) => {
   const routes = role === "admin" ? adminRoutes : employeeRoutes;
+
 
   return (
     <div className="relative h-full flex flex-col bg-[#0a0a0a] text-white">
@@ -163,6 +174,7 @@ const SidebarRoutes = ({ role }: { role: string }) => {
             </div>
           </div>
         ))}
+        
         <LogoutDialog />
       </div>
     </div>

@@ -1,30 +1,82 @@
-'use client'
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const SidebarItem = ({ item }: { item: any }) => {
-  const { name, path, icon: Icon } = item;
+  const { name, path, icon: Icon, subItems } = item; // Handle subItems
   const pathname = usePathname();
-
   const isActive = useMemo(() => path === pathname, [path, pathname]);
 
+  const [isOpen, setIsOpen] = useState(false); // State to manage sub-items visibility
+
+  const handleToggle = () => {
+    if (subItems) {
+      setIsOpen(!isOpen);
+    }
+  };
+
   return (
-    <Link href={path} className="relative">
-      <div
-        className={`text-sm py-2 px-4 flex items-center rounded-lg cursor-pointer transition-all ${
-          isActive
-            ? "bg-[#1A1A1A] text-green-500"
-            : "text-gray-400 hover:bg-gray-800 hover:text-white"
-        }`}
-      >
-        <Icon size={18} className="mr-4" />
-        {name}
-        {isActive && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500 "></div>
-        )}
-      </div>
-    </Link>
+    <>
+      {/* If the item has no sub-items, it's a regular link */}
+      {!subItems ? (
+        <Link href={path} className="relative">
+          <div
+            className={`text-sm py-2 px-4 flex items-center rounded-lg cursor-pointer transition-all ${
+              isActive
+                ? 'bg-[#1A1A1A] text-green-500'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+            }`}
+          >
+            {Icon && <Icon size={18} className="mr-4" />} {/* Icon for the item */}
+            {name}
+            {isActive && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
+            )}
+          </div>
+        </Link>
+      ) : (
+        // If the item has sub-items, it toggles them on click
+        <>
+          <div
+            className={`relative text-sm py-2 px-4 flex items-center rounded-lg cursor-pointer transition-all ${
+              isOpen ? 'text-green-500' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+            }`}
+            onClick={handleToggle}
+          >
+            {Icon && <Icon size={18} className="mr-4" />}
+            {name}
+            <span className="ml-auto">
+              {isOpen ? (
+                <ChevronDown size={16} className="text-gray-400" />
+              ) : (
+                <ChevronRight size={16} className="text-gray-400" />
+              )}
+            </span>
+          </div>
+
+          {/* Render sub-items if open */}
+          {isOpen && (
+            <div className="flex flex-col space-y-1 ml-6">
+              {subItems.map((subItem: any, idx: number) => (
+                <Link href={subItem.path} key={idx}>
+                  <div
+                    className={`text-sm py-2 px-4 flex items-center rounded-lg cursor-pointer transition-all ${
+                      pathname === subItem.path
+                        ? 'bg-[#1A1A1A] text-green-500'
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    {subItem.name}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </>
   );
 };
 
