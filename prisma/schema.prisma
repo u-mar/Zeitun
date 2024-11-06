@@ -58,6 +58,7 @@ model User {
   phoneNumber   String?       @unique
   sells         Sell[]
   transaction   Transaction[]
+  debt          Debt[]
 }
 
 model Category {
@@ -117,22 +118,22 @@ model SellItem {
 }
 
 model Sell {
-  id         String     @id @default(auto()) @map("_id") @db.ObjectId
-  userId     String     @db.ObjectId
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items      SellItem[]
-  total      Float
-  type       Type
-  cashAmount Float?
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @db.ObjectId
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         SellItem[]
+  total         Float
+  type          Type
+  cashAmount    Float?
   digitalAmount Float?
-  status     String     @default("pending")
-  discount   Float
-  customerId String?    @db.ObjectId
-  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  accountId  String     @db.ObjectId // New field to link to Accounts
-  account    Accounts   @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  status        String     @default("pending")
+  discount      Float
+  customerId    String?    @db.ObjectId
+  customer      Customer?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  accountId     String     @db.ObjectId // New field to link to Accounts
+  account       Accounts   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 enum Type {
@@ -158,6 +159,7 @@ model Accounts {
   updatedAt    DateTime      @updatedAt
   transactions Transaction[]
   sells        Sell[] // New relation to Sell model
+  debt         Debt[]
 }
 
 model TransactionCategory {
@@ -215,4 +217,38 @@ enum TransactionType {
 enum UserRole {
   admin
   employee
+}
+
+model Debt {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  details         String // Details of the debt
+  takerName       String // Name of the person who took the debt
+  userId          String?       @db.ObjectId
+  user            User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId       String        @db.ObjectId
+  account         Accounts      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amountTaken     Float // Total debt taken
+  remainingAmount Float? // Amount still owed
+  cashAmount      Float? // Amount
+  digitalAmount   Float? // Amount
+  status          DebtStatus    @default(taken) // Current status of the debt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  payments        DebtPayment[] // Relation to DebtPayment model for partial payments
+}
+
+model DebtPayment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  debtId        String   @db.ObjectId
+  debt          Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  cashAmount    Float? // Amount
+  digitalAmount Float? // Amount
+  amountPaid    Float // Amount paid in this transaction
+  paymentDate   DateTime @default(now()) // Timestamp of this payment
+}
+
+enum DebtStatus {
+  taken
+  returned
+  partially_returned
 }

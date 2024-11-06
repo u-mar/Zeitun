@@ -158,16 +158,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     retry: 3,
   });
 
-  // Automatically select the default account
-  useEffect(() => {
-    if (!order && accounts && accounts.length > 0) {
-      const defaultAccount = accounts.find(account => account.default);
-      if (defaultAccount) {
-        setValue("accountId", defaultAccount.id);
-      }
-    }
-  }, [accounts, order, setValue]);
-
   useEffect(() => {
     const subscription = watch((values) => {
       const total = (values.products ?? []).reduce(
@@ -182,17 +172,6 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
     return () => subscription.unsubscribe();
   }, [watch, setTotalAmount]);
 
-
-  // Automatically update cash/digital to match total
-  useEffect(() => {
-    if (watchCashAmount) {
-      const remainingDigitalAmount = (Number(totalAmount) - Number(watchCashAmount)).toFixed(2);
-      setValue("digitalAmount", Number(remainingDigitalAmount));
-    } else if (watchDigitalAmount) {
-      const remainingCashAmount = (Number(totalAmount) - Number(watchDigitalAmount)).toFixed(2);
-      setValue("cashAmount", Number(remainingCashAmount));
-    }
-  }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
 
   // Input references for focus management
   const productRef = useRef<any>(null);
@@ -217,6 +196,29 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       }
     }
   };
+  // Automatically select the default account
+  useEffect(() => {
+    if (!order && accounts && accounts.length > 0) {
+      const defaultAccount = accounts.find(account => account.default);
+      if (defaultAccount) {
+        setValue("accountId", defaultAccount.id);
+      }
+    }
+  }, [accounts, order, setValue]);
+
+
+
+  // Automatically update cash/digital to match total
+  useEffect(() => {
+    if (watchCashAmount) {
+      const remainingDigitalAmount = (Number(totalAmount) - Number(watchCashAmount)).toFixed(2);
+      setValue("digitalAmount", Number(remainingDigitalAmount));
+    } else if (watchDigitalAmount) {
+      const remainingCashAmount = (Number(totalAmount) - Number(watchDigitalAmount)).toFixed(2);
+      setValue("cashAmount", Number(remainingCashAmount));
+    }
+  }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
+
   // Initialize selectedVariants and selectedSkus in edit mode
   useEffect(() => {
     if (order && products) {
@@ -290,6 +292,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       );
       return;
     }
+
 
 
     const orderData = {
@@ -462,6 +465,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     </td>
 
                     {/* Price */}
+                    {/* Price */}
                     <td className="py-3 px-6 text-left">
                       <input
                         ref={(e) => {
@@ -470,6 +474,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                         }}
                         type="number"
                         className="border border-gray-300 p-2 rounded-md w-full"
+                        placeholder={watchProducts[index]?.price ? `Price: ${watchProducts[index].price}` : "Enter product price"} // Dynamic placeholder
                         value={watchProducts[index]?.price || ""}
                         onChange={(e) =>
                           setValue(
@@ -477,10 +482,12 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                             parseFloat(e.target.value)
                           )
                         }
+                        onFocus={(e) => e.target.value = ""} // Clear value on focus
                         onKeyDown={(e) => handleEnterPress(e, priceRef, quantityRef)}
                         onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
                       />
                     </td>
+
 
                     {/* Quantity */}
                     <td className="py-3 px-6 text-left">
@@ -563,33 +570,31 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             </label>
             <input
               type="number"
-              ref={(e) => {
-                cashRef.current = e;
-                register("cashAmount", { required: true }).ref(e);
-              }}
+              {...register("cashAmount", { required: true })} // Register with react-hook-form
               className="border border-gray-300 p-2 rounded-md w-full"
               placeholder="Enter cash amount"
               onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
-              onKeyDown={(e) => handleEnterPress(e, cashRef, digitalRef)}
+              onKeyDown={(e) => handleEnterPress(e, cashRef, digitalRef)} // Focus the digital amount field next
             />
           </div>
+
+          {/* Digital Amount Input */}
           <div>
             <label className="block text-gray-700 font-semibold">
               Digital Amount
             </label>
             <input
               type="number"
-              ref={(e) => {
-                digitalRef.current = e;
-                register("digitalAmount", { required: true }).ref(e);
-              }}
+              {...register("digitalAmount", { required: true })} // Register with react-hook-form
               className="border border-gray-300 p-2 rounded-md w-full"
               placeholder="Enter digital amount"
               onWheel={(e) => e.currentTarget.blur()} // Disable mouse wheel change
-              onKeyDown={(e) => handleEnterPress(e, digitalRef, submitButtonRef)}
+              onKeyDown={(e) => handleEnterPress(e, digitalRef, submitButtonRef)} // Focus the submit button next
             />
           </div>
         </div>
+
+
 
         {/* Total Calculation */}
         <div className="text-right">

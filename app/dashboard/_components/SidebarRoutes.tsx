@@ -16,6 +16,7 @@ import Link from "next/link";
 import SidebarItem from "./sub-item";
 import LogoutDialog from "./LogoutDialog";
 import { COMPANY_NAME } from "@/lib/config";
+import { RiTakeawayFill } from "react-icons/ri";
 
 
 const adminRoutes = [
@@ -57,6 +58,11 @@ const adminRoutes = [
         path: "/dashboard/admin/transaction",
         icon: Send,
       },
+      // {
+      //   name: "Debts",
+      //   path: "/dashboard/admin/debt",
+      //   icon: RiTakeawayFill,
+      // },
       {
         name: "Report",
         icon: BarChart2,

@@ -51,6 +51,7 @@ export const AuthOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 2 * 60 * 60, // 2 hours in seconds
   },
   adapter: PrismaAdapter(new PrismaClient()), // Use a default Prisma client for initialization
   pages: {
