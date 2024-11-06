@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
 
-// POST route to record a payment against a debt
-export async function POST(request: NextRequest) {
+// PATCH route to update a payment against a debt
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   if (request.headers.get("content-length") === "0") {
     return NextResponse.json(
       { error: "You have to provide body information" },
@@ -13,72 +16,104 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
 
   try {
+    // Fetch the existing debt payment
+    const existingDebtPayment = await prisma.debtPayment.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingDebtPayment) {
+      return NextResponse.json(
+        { error: "Debt payment not found" },
+        { status: 404 }
+      );
+    }
+
     // Fetch the debt to ensure it exists and get the current remaining amount
     const debt = await prisma.debt.findUnique({
-      where: { id: body.debtId },
+      where: { id: existingDebtPayment.debtId },
     });
 
     if (!debt) {
       return NextResponse.json({ error: "Debt not found" }, { status: 404 });
     }
-
-    // Calculate the new remaining amount after payment
-    const newRemainingAmount = (debt.remainingAmount || 0) - body.amountPaid;
+    const amountPaid = body.cashAmount + body.digitalAmount;
+    
+    // Check if the amount paid is less than or equal to the remaining amount
+    if (amountPaid > (debt.remainingAmount || 0)) {
+      return NextResponse.json(
+        {
+          error:
+            "Amount paid must be less than or equal to the remaining amount",
+        },
+        { status: 400 }
+      );
+    }
+    // Calculate the new remaining amount after updating the payment
+    const newRemainingAmount =
+      (debt.remainingAmount || 0) + existingDebtPayment.amountPaid - amountPaid;
 
     // Update debt status based on the remaining amount
     const newStatus =
       newRemainingAmount <= 0 ? "returned" : "partially_returned";
 
     // Start the transaction
-    const debtPayment = await prisma.$transaction(async (transactionPrisma) => {
-      // Create the debt payment record
-      const debtPayment = await transactionPrisma.debtPayment.create({
-        data: {
-          debtId: body.debtId,
-          amountPaid: body.amountPaid,
-          cashAmount: body.cashAmount,
-          digitalAmount: body.digitalAmount,
-        },
-      });
+    const updatedDebtPayment = await prisma.$transaction(
+      async (transactionPrisma) => {
+        // Update the debt payment record
+        const updatedDebtPayment = await transactionPrisma.debtPayment.update({
+          where: { id: params.id },
+          data: {
+            amountPaid,
+            cashAmount: body.cashAmount,
+            digitalAmount: body.digitalAmount,
+          },
+        });
 
-      // Update the debt with the new remaining amount and status
-      await transactionPrisma.debt.update({
-        where: { id: body.debtId },
-        data: {
-          remainingAmount: newRemainingAmount,
-          status: newStatus,
-        },
-      });
+        // Update the debt with the new remaining amount and status
+        await transactionPrisma.debt.update({
+          where: { id: existingDebtPayment.debtId },
+          data: {
+            remainingAmount: newRemainingAmount,
+            status: newStatus,
+          },
+        });
 
-      // Fetch the account details
-      const account = await transactionPrisma.accounts.findUnique({
-        where: { id: debt.accountId },
-      });
+        // Fetch the account details
+        const account = await transactionPrisma.accounts.findUnique({
+          where: { id: debt.accountId },
+        });
 
-      if (!account) {
-        throw new Error("Account not found");
+        if (!account) {
+          throw new Error("Account not found");
+        }
+
+        // Update the account balance and cash balance based on the payment amounts
+        const newBalance =
+          account.balance -
+          (existingDebtPayment.digitalAmount || 0) +
+          (body.digitalAmount || 0);
+        const newCashBalance =
+          account.cashBalance -
+          (existingDebtPayment.cashAmount || 0) +
+          (body.cashAmount || 0);
+
+        await transactionPrisma.accounts.update({
+          where: { id: debt.accountId },
+          data: {
+            balance: newBalance,
+            cashBalance: newCashBalance,
+          },
+        });
+
+        return updatedDebtPayment;
       }
+    );
 
-      // Update the account balance and cash balance based on the payment amounts
-      const newBalance = account.balance + (body.digitalAmount || 0);
-      const newCashBalance = account.cashBalance + (body.cashAmount || 0);
-
-      await transactionPrisma.accounts.update({
-        where: { id: debt.accountId },
-        data: {
-          balance: newBalance,
-          cashBalance: newCashBalance,
-        },
-      });
-
-      return debtPayment;
-    });
-
-    return NextResponse.json(debtPayment, { status: 201 });
+    return NextResponse.json(updatedDebtPayment, { status: 200 });
   } catch (error: any) {
-    console.error("Error recording debt payment:", error);
+    console.error("Error updating debt payment:", error);
     return NextResponse.json(
-      { message: "Error recording payment", error: error.message },
+      { message: "Error updating payment", error: error.message },
       { status: 500 }
     );
   }
@@ -173,11 +208,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const debt = await prisma.debt.findUnique({
-      where: { id: params.id },
-      include: {
-        payments: true,
-      },
+    const debt = await prisma.debtPayment.findMany({
+      where: { debtId: params.id },
     });
 
     if (!debt) {

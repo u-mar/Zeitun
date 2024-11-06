@@ -55,6 +55,10 @@ const DeleteAlertDialog = ({ id, type }: { id: string; type: string }) => {
         await axios.delete(`${API}/admin/debt/${id}`);
         queryClient.invalidateQueries({ queryKey: [`debt`] });
       }
+       else if (type === "payment") {
+        await axios.delete(`${API}/admin/debt/paid/${id}`);
+        queryClient.invalidateQueries({ queryKey: [`payments`] });
+      }
   
       // Successful deletion
       router.refresh();

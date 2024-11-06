@@ -50,11 +50,9 @@ export const columns: ColumnDef<Users>[] = [
 
       return (
         <div className="flex items-center space-x-2">
-          {/* View Button */}
-
           {/* Edit Button */}
-          <Link 
-className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"          href={`/dashboard/admin/user/edit/${user.id}`}>
+          <Link
+            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600" href={`/dashboard/admin/user/edit/${user.id}`}>
             Edit
           </Link>
           {/* Delete Button */}

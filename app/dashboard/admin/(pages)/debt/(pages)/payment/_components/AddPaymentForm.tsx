@@ -17,10 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
 import { API } from "@/lib/config";
 import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "@/components/ui/textarea";
-import AccountIdSelect from "./AccountIdSelect";
 import { paymentSchema } from "@/app/validationSchema/debtPaymmentSchema";
 import { Loader2 } from "lucide-react";
 import { DebtPayment } from "@prisma/client";
@@ -39,8 +37,9 @@ const AddDebtPaymentForm = ({ debtPayment }: { debtPayment?: DebtPayment }) => {
   const [loading, setLoading] = useState(false);
 
   // Extract debtId from URL
-  const searchParams = new URLSearchParams(window.location.search);
-  const debtId = searchParams.get("debtId") as string;
+  const searchParams = useSearchParams()
+  const debtId = searchParams.get('debtId')
+  console.log('debtId', debtId)
 
   // Form references
   const cashAmountRef = useRef<HTMLInputElement | null>(null);
@@ -51,7 +50,7 @@ const AddDebtPaymentForm = ({ debtPayment }: { debtPayment?: DebtPayment }) => {
   const form = useForm<z.infer<typeof refinedDebtPaymentSchema>>({
     resolver: zodResolver(refinedDebtPaymentSchema),
     defaultValues: {
-      debtId: debtPayment?.debtId || debtId, // Populate if editing or from URL
+      debtId: debtPayment?.debtId || (debtId ?? undefined), // Populate if editing or from URL
       cashAmount: debtPayment?.cashAmount || 0, // Store as number initially
       digitalAmount: debtPayment?.digitalAmount || 0, // Store as number initially
     },
@@ -87,7 +86,7 @@ const AddDebtPaymentForm = ({ debtPayment }: { debtPayment?: DebtPayment }) => {
     try {
       if (debtPayment) {
         // PATCH request for editing
-        await axios.patch(`${API}/admin/debt/payment/${debtPayment.id}`, {
+        await axios.patch(`${API}/admin/debt/paid/${debtPayment.id}`, {
           ...values,
           cashAmount: cashAmt,
           digitalAmount: digitalAmt,
@@ -103,11 +102,11 @@ const AddDebtPaymentForm = ({ debtPayment }: { debtPayment?: DebtPayment }) => {
         toast.success("Successfully Created Debt Payment");
       }
   
-      queryClient.invalidateQueries({ queryKey: ["debtPayment"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
       router.push("/dashboard/admin/debt"); // Navigate to debt payment dashboard or listing
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error handling debt payment request", error);
-      toast.error("An error occurred. Please try again.");
+      toast.error( error.response?.data?.error || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ import {
   Store,
   Send,
   Group,
+  MonitorUp,
 } from "lucide-react";
 // import SidebarItem from "./item";
 import Link from "next/link";
@@ -58,11 +59,11 @@ const adminRoutes = [
         path: "/dashboard/admin/transaction",
         icon: Send,
       },
-      // {
-      //   name: "Debts",
-      //   path: "/dashboard/admin/debt",
-      //   icon: RiTakeawayFill,
-      // },
+      {
+        name: "Debts",
+        path: "/dashboard/admin/debt",
+        icon: MonitorUp,
+      },
       {
         name: "Report",
         icon: BarChart2,

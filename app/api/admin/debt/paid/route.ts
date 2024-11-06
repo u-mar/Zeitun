@@ -21,7 +21,16 @@ export async function POST(request: NextRequest) {
         if (!debt) {
             return NextResponse.json({ error: "Debt not found" }, { status: 404 });
         }
+
         const amountPaid = body.cashAmount + body.digitalAmount;
+
+        // Check if the amount paid is less than or equal to the remaining amount
+        if (amountPaid > (debt.remainingAmount || 0)) {
+            return NextResponse.json(
+                { error: "Amount paid must be less than or equal to the remaining amount" },
+                { status: 400 }
+            );
+        }
 
         // Calculate the new remaining amount after payment
         const newRemainingAmount = (debt.remainingAmount || 0) - amountPaid;
