@@ -24,6 +24,7 @@ type ReportData = {
   digitalAmount: number;
   totalAmount: number;
   orderCount: number;
+  profit: number;
   quantityCount: number;
   selectedUserId?: string;
   selectedUserName?: string;
@@ -33,6 +34,7 @@ type ReportData = {
   selectedProductName?: string;
   fromDate?: string;
   toDate?: string;
+  
 };
 
 export default function OrderReport() {
@@ -146,274 +148,283 @@ export default function OrderReport() {
 
   return (
     <div className="p-6 space-y-8 bg-gray-50 min-h-screen">
-      {/* Search Filters Section */}
-      <section className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4">Search Data</h3>
-        <div className="grid grid-cols-3 gap-4">
-          {/* Category Selection */}
-          <div>
-            <label className="block text-sm mb-2 text-gray-600">Category</label>
-            <select
-              className="w-full border border-gray-300 p-2 rounded-md"
-              value={selectedCategory?.id || 'all'}
-              onChange={(e) => {
-                const selected = categories.find(c => c.id === e.target.value);
-                if (selected) {
-                  setSelectedCategory(selected);
-                } else {
-                  setSelectedCategory(null);
-                }
-              }}
-            >
-              <option value="all">All Categories</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
+  {/* Search Filters Section */}
+  <section className="bg-white p-6 rounded-lg shadow-md">
+    <h3 className="text-lg font-semibold mb-4">Search Data</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {/* Category Selection */}
+      <div>
+        <label className="block text-sm mb-2 text-gray-600">Category</label>
+        <select
+          className="w-full border border-gray-300 p-2 rounded-md"
+          value={selectedCategory?.id || 'all'}
+          onChange={(e) => {
+            const selected = categories.find((c) => c.id === e.target.value);
+            setSelectedCategory(selected || null);
+          }}
+        >
+          <option value="all">All Categories</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-          {/* Product Selection */}
-          <div>
-            <label className="block text-sm mb-2 text-gray-600">Product</label>
-            <select
-              className="w-full border border-gray-300 p-2 rounded-md"
-              value={selectedProduct?.id || 'all'}
-              onChange={(e) => {
-                const selected = products.find(p => p.id === e.target.value);
-                if (selected) {
-                  setSelectedProduct(selected);
-                } else {
-                  setSelectedProduct(null);
-                }
-              }}
-              disabled={!selectedCategory}
-            >
-              <option value="all">All Products</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Product Selection */}
+      <div>
+        <label className="block text-sm mb-2 text-gray-600">Product</label>
+        <select
+          className="w-full border border-gray-300 p-2 rounded-md"
+          value={selectedProduct?.id || 'all'}
+          onChange={(e) => {
+            const selected = products.find((p) => p.id === e.target.value);
+            setSelectedProduct(selected || null);
+          }}
+          disabled={!selectedCategory}
+        >
+          <option value="all">All Products</option>
+          {products.map((product) => (
+            <option key={product.id} value={product.id}>
+              {product.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-          {/* User Selection */}
-          <div>
-            <label className="block text-sm mb-2 text-gray-600">User</label>
-            <select
-              className="w-full border border-gray-300 p-2 rounded-md"
-              value={selectedUser?.id || 'all'}
-              onChange={(e) => {
-                const selected = users.find(u => u.id === e.target.value);
-                if (selected) {
-                  setSelectedUser(selected);
-                } else {
-                  setSelectedUser(null);
-                }
-              }}
-            >
-              <option value="all">All Users</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* User Selection */}
+      <div>
+        <label className="block text-sm mb-2 text-gray-600">User</label>
+        <select
+          className="w-full border border-gray-300 p-2 rounded-md"
+          value={selectedUser?.id || 'all'}
+          onChange={(e) => {
+            const selected = users.find((u) => u.id === e.target.value);
+            setSelectedUser(selected || null);
+          }}
+        >
+          <option value="all">All Users</option>
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-          {/* Date Range Selection */}
-          <div>
-            <label className="block text-sm mb-2 text-gray-600">Date Range</label>
-            <select
-              className="w-full border border-gray-300 p-2 rounded-md"
-              value={dateRange}
-              onChange={(e) => {
-                setDateRange(e.target.value);
-                setFromDate(null);
-                setToDate(null);
-                if (e.target.value === 'specific-month') {
-                  setSelectedYear(currentYear.toString());
-                  setSelectedMonth(currentMonth);
-                } else if (e.target.value === 'specific-year') {
-                  setSelectedYear(currentYear.toString());
-                }
-              }}
-            >
-              <option value="all-time">All Time</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="this-week">This Week</option>
-              <option value="this-month">This Month</option>
-              <option value="this-year">This Year</option>
-              <option value="specific-month">Specific Month</option>
-              <option value="specific-year">Specific Year</option>
-              <option value="specific-date">Specific Date Range</option>
-            </select>
-          </div>
+      {/* Date Range Selection */}
+      <div>
+        <label className="block text-sm mb-2 text-gray-600">Date Range</label>
+        <select
+          className="w-full border border-gray-300 p-2 rounded-md"
+          value={dateRange}
+          onChange={(e) => {
+            setDateRange(e.target.value);
+            setFromDate(null);
+            setToDate(null);
+            if (e.target.value === 'specific-month') {
+              setSelectedYear(currentYear.toString());
+              setSelectedMonth(currentMonth);
+            } else if (e.target.value === 'specific-year') {
+              setSelectedYear(currentYear.toString());
+            }
+          }}
+        >
+          <option value="all-time">All Time</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="this-week">This Week</option>
+          <option value="this-month">This Month</option>
+          <option value="this-year">This Year</option>
+          <option value="specific-month">Specific Month</option>
+          <option value="specific-year">Specific Year</option>
+          <option value="specific-date">Specific Date Range</option>
+        </select>
+      </div>
 
-          {/* Specific Year Selection */}
-          {dateRange === 'specific-year' && (
-            <div>
-              <label className="block text-sm mb-2 text-gray-600">Select Year</label>
-              <select
-                className="w-full border border-gray-300 p-2 rounded-md"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                defaultValue={currentYear.toString()}
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Specific Month Selection */}
-          {dateRange === 'specific-month' && (
-            <div>
-              <label className="block text-sm mb-2 text-gray-600">Select Month</label>
-              <select
-                className="w-full border border-gray-300 p-2 rounded-md"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-              >
-                {months.map((month, index) => (
-                  <option key={index} value={index + 1}>{month}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Specific Date Range */}
-          {dateRange === 'specific-date' && (
-            <>
-              <div>
-                <label className="block text-sm mb-2 text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 p-2 rounded-md"
-                  value={fromDate || ''}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2 text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 p-2 rounded-md"
-                  value={toDate || ''}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Filter Button */}
-        <div className="mt-4">
-          <button
-            onClick={handleFilter}
-            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-            disabled={loading}
+      {/* Specific Year Selection */}
+      {dateRange === 'specific-year' && (
+        <div>
+          <label className="block text-sm mb-2 text-gray-600">Select Year</label>
+          <select
+            className="w-full border border-gray-300 p-2 rounded-md"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
           >
-            {loading ? "Loading..." : "Filter"}
-          </button>
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
         </div>
-      </section>
-
-      {/* Error Handling */}
-      {error && (
-        <div className="text-red-500 bg-red-100 p-4 rounded-md">{error}</div>
       )}
 
-      {/* Summary Stats Section */}
-      {results && (
-        <>
-          <section className="grid grid-cols-3 gap-4">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <div className="text-3xl font-bold text-gray-800">
-                {results.cashAmount.toFixed(2)}
-              </div>
-              <div className="text-gray-600">Total Cash</div>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <div className="text-3xl font-bold text-gray-800">
-                {results.digitalAmount.toFixed(2)}
-              </div>
-              <div className="text-gray-600">Total mPesa</div>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <div className="text-3xl font-bold text-gray-800">
-                {results.totalAmount.toFixed(2)}
-              </div>
-              <div className="text-gray-600">Total Orders</div>
-            </div>
-          </section>
+      {/* Specific Month Selection */}
+      {dateRange === 'specific-month' && (
+        <div>
+          <label className="block text-sm mb-2 text-gray-600">Select Month</label>
+          <select
+            className="w-full border border-gray-300 p-2 rounded-md"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          >
+            {months.map((month, index) => (
+              <option key={index} value={index + 1}>
+                {month}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-          {/* Earnings Table Section */}
-          <section className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-4">Earnings Summary</h3>
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-2 px-4 border-b">Summary Type</th>
-                  <th className="py-2 px-4 border-b">Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">From Date</td>
-                  <td className="py-2 px-4 border-b">{results.fromDate || "Not Selected Yet"}</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">To Date</td>
-                  <td className="py-2 px-4 border-b">{results.toDate || "Not Selected Yet"}</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Orders Count</td>
-                  <td className="py-2 px-4 border-b">{results.orderCount}</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Quantities Sold</td>
-                  <td className="py-2 px-4 border-b">{results.quantityCount}</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Total Cash</td>
-                  <td className="py-2 px-4 border-b"><strong>{results.cashAmount}</strong> <small>KES</small></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Total mPesa</td>
-                  <td className="py-2 px-4 border-b"><strong>{results.digitalAmount}</strong> <small>KES</small></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Total Amount</td>
-                  <td className="py-2 px-4 border-b"><strong>{results.totalAmount}</strong> <small>KES</small></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Selected User</td>
-                  <td className="py-2 px-4 border-b">
-                    {results.selectedUserName || "All Users"}
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Selected Category</td>
-                  <td className="py-2 px-4 border-b">
-                    {results.selectedCategoryName || "All Categories"}
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">Selected Product</td>
-                  <td className="py-2 px-4 border-b">
-                    {results.selectedProductName || "All Products"}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
+      {/* Specific Date Range */}
+      {dateRange === 'specific-date' && (
+        <>
+          <div>
+            <label className="block text-sm mb-2 text-gray-600">From Date</label>
+            <input
+              type="date"
+              className="w-full border border-gray-300 p-2 rounded-md"
+              value={fromDate || ''}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-600">To Date</label>
+            <input
+              type="date"
+              className="w-full border border-gray-300 p-2 rounded-md"
+              value={toDate || ''}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </div>
         </>
       )}
     </div>
+
+    {/* Filter Button */}
+    <div className="mt-4">
+      <button
+        onClick={handleFilter}
+        className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+        disabled={loading}
+      >
+        {loading ? 'Loading...' : 'Filter'}
+      </button>
+    </div>
+  </section>
+
+  {/* Error Handling */}
+  {error && <div className="text-red-500 bg-red-100 p-4 rounded-md">{error}</div>}
+
+  {/* Summary Stats Section */}
+  {results && (
+  <>
+    <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="bg-white p-6 rounded-lg shadow-md text-center">
+        <div className="text-3xl font-bold text-gray-800">
+          {results.cashAmount.toFixed(2)}
+        </div>
+        <div className="text-gray-600">Total Cash</div>
+      </div>
+      <div className="bg-white p-6 rounded-lg shadow-md text-center">
+        <div className="text-3xl font-bold text-gray-800">
+          {results.digitalAmount.toFixed(2)}
+        </div>
+        <div className="text-gray-600">Total mPesa</div>
+      </div>
+      <div className="bg-white p-6 rounded-lg shadow-md text-center">
+        <div className="text-3xl font-bold text-gray-800">
+          {results.totalAmount.toFixed(2)}
+        </div>
+        <div className="text-gray-600">Total Orders</div>
+      </div>
+      <div className="bg-white p-6 rounded-lg shadow-md text-center">
+        <div className="text-3xl font-bold text-gray-800">
+          {results.profit.toFixed(2)}
+        </div>
+        <div className="text-gray-600">Profit</div>
+      </div>
+    </section>
+
+    {/* Earnings Table Section */}
+    <section className="bg-white p-6 rounded-lg shadow-md">
+      <h3 className="text-lg font-semibold mb-4">Earnings Summary</h3>
+      <table className="min-w-full bg-white border border-gray-200">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="py-2 px-4 border-b">Summary Type</th>
+            <th className="py-2 px-4 border-b">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">From Date</td>
+            <td className="py-2 px-4 border-b">{results.fromDate || "Not Selected Yet"}</td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">To Date</td>
+            <td className="py-2 px-4 border-b">{results.toDate || "Not Selected Yet"}</td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Orders Count</td>
+            <td className="py-2 px-4 border-b">{results.orderCount}</td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Quantities Sold</td>
+            <td className="py-2 px-4 border-b">{results.quantityCount}</td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Total Cash</td>
+            <td className="py-2 px-4 border-b">
+              <strong>{results.cashAmount}</strong> <small>KES</small>
+            </td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Total mPesa</td>
+            <td className="py-2 px-4 border-b">
+              <strong>{results.digitalAmount}</strong> <small>KES</small>
+            </td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Total Amount</td>
+            <td className="py-2 px-4 border-b">
+              <strong>{results.totalAmount}</strong> <small>KES</small>
+            </td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Profit</td>
+            <td className="py-2 px-4 border-b">
+              <strong>{results.profit}</strong> <small>KES</small>
+            </td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Selected User</td>
+            <td className="py-2 px-4 border-b">
+              {results.selectedUserName || "All Users"}
+            </td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Selected Category</td>
+            <td className="py-2 px-4 border-b">
+              {results.selectedCategoryName || "All Categories"}
+            </td>
+          </tr>
+          <tr className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">Selected Product</td>
+            <td className="py-2 px-4 border-b">
+              {results.selectedProductName || "All Products"}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </>
+)}
+
+</div>
+
   );
 }

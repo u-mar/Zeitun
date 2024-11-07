@@ -137,7 +137,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Fetch sales with the filters applied
     const sells = await prisma.sell.findMany({
       where: {
         ...sellWhere,
@@ -148,32 +147,43 @@ export async function GET(request: Request) {
         },
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true, // Include product data to access the cost price
+          },
+        },
       },
     });
 
-    // Calculate totals
-    const cashAmount = sells.reduce(
-      (sum, sell) => sum + (sell.cashAmount || 0),
-      0
-    );
-    const digitalAmount = sells.reduce(
-      (sum, sell) => sum + (sell.digitalAmount || 0),
-      0
-    );
-    const totalAmount = cashAmount + digitalAmount;
+    // Calculate totals and profit
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let cashAmount = 0;
+    let digitalAmount = 0;
 
-    // Count orders and items
+    sells.forEach((sell) => {
+      cashAmount += sell.cashAmount || 0;
+      digitalAmount += sell.digitalAmount || 0;
+      sell.items.forEach((item) => {
+        const revenue = item.price * item.quantity; // Selling price * quantity
+        const cost = (item.product?.price || 0) * item.quantity; // Cost price * quantity
+        totalRevenue += revenue;
+        totalCost += cost;
+      });
+    });
+
+    const profit = totalRevenue - totalCost;
+    const totalAmount = cashAmount + digitalAmount;
     const orderCount = sells.length;
     const quantityCount = sells.reduce((totalItems, sell) => {
-        return totalItems + sell.items.reduce((sum, item) => sum + item.quantity, 0);
-      }, 0);
-      
+      return totalItems + sell.items.reduce((sum, item) => sum + item.quantity, 0);
+    }, 0);
 
     return NextResponse.json({
       cashAmount,
       digitalAmount,
       totalAmount,
+      profit, // Add profit to the response
       orderCount,
       quantityCount,
       selectedCategory: category === "all" ? "All Categories" : category,
