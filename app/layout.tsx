@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import ReactQueryClientProvider from './_components/Providers/ReactQueryClientProvider';
 import NextAuthProvider from "./_components/Providers/NextAuthProvider";
 import Head from "next/head";
+import { COMPANY_NAME } from "@/lib/config";
 
 // Load Geist Sans and Geist Mono fonts locally
 const geistSans = localFont({
@@ -22,8 +23,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "AQ STYLES",
-  description: "Inventory management system for AQ STYLES",
+  title: `${COMPANY_NAME}`,
+  description: `Inventory management system for ${COMPANY_NAME}`,
 };
 
 export default async function RootLayout({

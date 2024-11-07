@@ -1,10 +1,11 @@
+import { COMPANY_NAME, COMPANY_SHORT_NAME } from "@/lib/config";
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "AQ Styles",
-    short_name: "AQ",
-    description: "Inventory management system for AQ STYLES",
+    name: `${COMPANY_NAME}`,
+    short_name: `${COMPANY_SHORT_NAME}`,
+    description:  `Inventory management system for ${COMPANY_NAME}`,
     start_url: "/",
     scope: "/",
     display: "standalone",
