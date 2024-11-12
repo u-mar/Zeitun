@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 interface Order {
   id: string;
+  orderId: string;
   total: number;
   type: string;
   status: string;
@@ -31,7 +32,7 @@ export const columns: ColumnDef<Order>[] = [
     accessorKey: "id",
     header: "Order ID",
     cell: ({ row }) => {
-      return <span className="text-gray-700 font-medium">{row.original.id}</span>;
+      return <span className="text-gray-700 font-medium">{row.original.orderId}</span>;
     },
   },
   {

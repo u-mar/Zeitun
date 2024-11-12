@@ -36,7 +36,7 @@ export default function List() {
           </Button>
         </Link>
       </div>
-      <DataTable columns={columns} data={data} search={'id'} />
+      <DataTable columns={columns} data={data} search={'orderId'} />
     </div>
   );
 }

@@ -61,7 +61,6 @@
     "tailwind-merge": "^2.5.2",
     "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss-animate": "^1.0.7",
-    "whatsapp-web.js": "^1.26.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
