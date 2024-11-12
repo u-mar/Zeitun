@@ -45,15 +45,15 @@ const adminRoutes = [
         icon: Group,
       },
       {
-        name: "User",
-        path: "/dashboard/admin/user",
-        icon: User,
-      },
-      {
         name: "Orders",
         path: "/dashboard/admin/sales",
         icon: ShoppingCart,
       },
+    ],
+  },
+  {
+    title: "FINANCES",
+    items: [
       {
         name: "Transactions",
         path: "/dashboard/admin/transaction",
@@ -88,6 +88,11 @@ const adminRoutes = [
   {
     title: "SETTINGS",
     items: [
+      {
+        name: "User",
+        path: "/dashboard/admin/user",
+        icon: User,
+      },
       {
         name: "Settings",
         path: "/dashboard/admin/setting",
@@ -181,7 +186,7 @@ const SidebarRoutes = ({ role }: { role: string }) => {
             </div>
           </div>
         ))}
-        
+
         <LogoutDialog />
       </div>
     </div>
