@@ -29,7 +29,7 @@ interface Order {
 
 export const columns: ColumnDef<Order>[] = [
   {
-    accessorKey: "id",
+    accessorKey: "orderId",
     header: "Order ID",
     cell: ({ row }) => {
       return <span className="text-gray-700 font-medium">{row.original.orderId}</span>;

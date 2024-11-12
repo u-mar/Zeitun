@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/client";
 
+
 // PATCH route to update a debt
 export async function PATCH(
   request: NextRequest,
@@ -38,22 +39,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Debt not found" }, { status: 404 });
     }
 
+    // Calculate the remaining amount
+    const newRemainingAmount = totalAmount - (existingDebt.amountTaken - (existingDebt.remainingAmount ?? 0));
+
     // Start the transaction
     const updatedDebt = await prisma.$transaction(async (transactionPrisma) => {
       // Update the debt record
-    const updatedDebt = await transactionPrisma.debt.update({
-      where: { id: params.id },
-      data: {
-        details: details,
-        takerName: takerName,
-        userId: userId || null,
-        cashAmount: cashAmt,
-        digitalAmount: digitalAmt,
-        // Adjust remaining amount
-        status: totalAmount > 0 ? "partially_returned" : "returned",
-        amountTaken: totalAmount, // Update amount taken
-      },
-    });
+      const updatedDebt = await transactionPrisma.debt.update({
+        where: { id: params.id },
+        data: {
+          details: details,
+          takerName: takerName,
+          userId: userId || null,
+          cashAmount: cashAmt,
+          digitalAmount: digitalAmt,
+          amountTaken: totalAmount,
+          remainingAmount: newRemainingAmount,
+          status: newRemainingAmount === 0 ? "returned" : (newRemainingAmount === totalAmount ? "taken" : "partially_returned"),
+        },
+      });
 
       // Update the account balance and cash balance based on the amounts taken
       const account = await transactionPrisma.accounts.findUnique({
@@ -89,6 +93,7 @@ export async function PATCH(
     );
   }
 }
+
 
 // DELETE route to delete a debt
 export async function DELETE(
