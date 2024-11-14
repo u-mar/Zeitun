@@ -59,6 +59,18 @@ const DeleteAlertDialog = ({ id, type }: { id: string; type: string }) => {
         await axios.delete(`${API}/admin/debt/paid/${id}`);
         queryClient.invalidateQueries({ queryKey: [`payments`] });
       }
+       else if (type === "swap") {
+        await axios.delete(`${API}/admin/swap/${id}`);
+        queryClient.invalidateQueries({ queryKey: [`swap`] });
+      }
+       else if (type === "bank") {
+        await axios.delete(`${API}/admin/bank/${id}`);
+        queryClient.invalidateQueries({ queryKey: [`bank`] });
+      }
+       else if (type === "bankPayment") {
+        await axios.delete(`${API}/admin/bankTransaction/${id}`);
+        queryClient.invalidateQueries({ queryKey: [`bankPayment`] });
+      }
   
       // Successful deletion
       router.refresh();

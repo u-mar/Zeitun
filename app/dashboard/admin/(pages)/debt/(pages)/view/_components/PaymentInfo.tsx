@@ -14,7 +14,6 @@ const PaymentInfo = ({ debt }: { debt: any }) => {
         retry: 3,
     });
 
-    console.log('data', payments);
 
     if (isLoading) {
         return <PaymentInfoSkeleton />;

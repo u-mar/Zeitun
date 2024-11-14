@@ -76,7 +76,7 @@ export async function PATCH(
         email: body.email || adminInfo.email,
         phoneNumber: body.phoneNumber || adminInfo.phoneNumber,
         role: body.role,
-        password: password || adminInfo.password,
+        password:  adminInfo.password,
       },
     });
 

@@ -59,6 +59,8 @@ model User {
   sells         Sell[]
   transaction   Transaction[]
   debt          Debt[]
+  bankAccount  BankAccount[] // Relation to BankAccount model
+   accountSwaps  AccountSwap[]
 }
 
 model Category {
@@ -119,7 +121,7 @@ model SellItem {
 
 model Sell {
   id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  orderId       String?     @unique // Unique order identifier (e.g., ORD-0001)
+  orderId       String?    @unique // Unique order identifier (e.g., ORD-0001)
   userId        String     @db.ObjectId
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items         SellItem[]
@@ -161,6 +163,9 @@ model Accounts {
   transactions Transaction[]
   sells        Sell[] // New relation to Sell model
   debt         Debt[]
+  fromAccountSwap AccountSwap[]  @relation("FromAccountSwap")
+  toAccountSwap   AccountSwap[]  @relation("ToAccountSwap")
+  bankTransaction  BankTransaction[] // New relation to BankAccount model
 }
 
 model TransactionCategory {
@@ -253,3 +258,75 @@ enum DebtStatus {
   returned
   partially_returned
 }
+
+// bank Accounts
+
+model BankAccount {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  name           String // Name of the debt taker
+  accountNumber String @unique // Number of the bank account
+  userId        String?           @db.ObjectId
+  user          User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cashBalance    Float             @default(0.0) // Balance for cash debts
+  digitalBalance Float             @default(0.0) // Balance for digital debts
+  totalBalance   Float             @default(0.0) // Combined balance (cash + digital)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  transactions   BankTransaction[] // All debts related to this bank account
+}
+
+// bank Transactions
+
+model BankTransaction {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  bankAccountId  String      @db.ObjectId
+  bankAccount    BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  accountId String @db.ObjectId
+  account       Accounts   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  details        String? // Details of the transaction
+  cashBalance    Float       @default(0.0) // Balance for cash debts
+  digitalBalance Float       @default(0.0) // Balance for digital debts
+  amount         Float // Amount of the transaction
+  acc            AccType // Type of the transaction (cash or digital)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+enum AccType {
+  cr
+  dr
+}
+
+
+
+// Account Swap model for the account swapping feature of the account 
+model AccountSwap {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  swapId           String     @unique
+  fromAccountId    String     @db.ObjectId
+  fromAccount      Accounts   @relation("FromAccountSwap", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toAccountId      String     @db.ObjectId
+  toAccount        Accounts   @relation("ToAccountSwap", fields: [toAccountId], references: [id], onDelete: Cascade)
+  userId           String     @db.ObjectId
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Amount in the source currency
+  fromAmount       Float      // e.g., 10,000 KES
+
+  fromCashAmount     Float?     // e.g., 100KES cash
+  fromDigitalAmount  Float?     // e.g., 4500KES digital
+  // Amount in the target currency
+  toAmount         Float      // e.g., 90 USD
+
+  // Exchange rate used for the conversion
+  exchangeRate     Float?      // e.g., 1 USD = 111.11 KES
+
+  // Split of the target amount into cash and digital
+  toCashAmount     Float?     // e.g., $45 cash
+  toDigitalAmount  Float?     // e.g., $45 digital
+
+  details          String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+

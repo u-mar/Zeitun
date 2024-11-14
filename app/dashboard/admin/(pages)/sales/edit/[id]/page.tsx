@@ -46,7 +46,6 @@ const EditOrderPage = async ({ params }: { params: { id: string } }) => {
     return <div>Order not found</div>;
   }
 
-
   return <AddOrderForm order={order as unknown as Order} />;
 };
 

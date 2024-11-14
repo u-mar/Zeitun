@@ -1,151 +1,102 @@
-// app/api/transactions/route.ts
-
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/prisma/client";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get('category') || 'all';
-  const transactionType = searchParams.get('transactionType') || 'all';
-  const fromDate = searchParams.get('fromDate') || '';
-  const toDate = searchParams.get('toDate') || '';
-  const dateRange = searchParams.get('dateRange') || '';
+  const category = searchParams.get("category");
+  const user = searchParams.get("user");
+  const dateRange = searchParams.get("dateRange");
+  const fromDate = searchParams.get("fromDate");
+  const toDate = searchParams.get("toDate");
+  const acc = searchParams.get("acc"); // Get acc type filter ('all', 'cr', or 'dr')
 
-  let where: any = {};
+  let transactionWhere: any = {
+    category: {
+      name: { not: "exchange" }
+    },
+    acc: acc && acc !== "all" ? acc : undefined // Apply 'acc' filter if not 'all'
+  };
 
-  // Adjust category filtering
-  if (category !== 'all') {
-    if (category === 'exchange') {
-      where.category = {
-        name: 'exchange',
-      };
-    } else {
-      where.categoryId = category;
-    }
-  } else {
-    // Exclude exchange category when 'all' is selected
-    where.category = {
-      name: {
-        not: 'exchange',
-      },
+  if (category && category !== 'all') {
+    transactionWhere.categoryId = category;
+  }
+
+  if (user && user !== 'all') {
+    transactionWhere.userId = user;
+  }
+
+  // Apply date filters
+  const currentDate = new Date();
+  if (dateRange === "today") {
+    transactionWhere.tranDate = {
+      gte: new Date(currentDate.setHours(0, 0, 0, 0)),
+      lt: new Date(currentDate.setHours(24, 0, 0, 0)),
     };
   }
 
-  // Adjust date range filtering
-  if (fromDate && toDate) {
-    where.tranDate = {
+  if (dateRange === "yesterday") {
+    const yesterday = new Date();
+    yesterday.setDate(currentDate.getDate() - 1);
+    transactionWhere.tranDate = {
+      gte: new Date(yesterday.setHours(0, 0, 0, 0)),
+      lt: new Date(currentDate.setHours(0, 0, 0, 0)),
+    };
+  }
+
+  if (dateRange === "specific-date" && fromDate && toDate) {
+    transactionWhere.tranDate = {
       gte: new Date(fromDate),
-      lte: new Date(toDate),
+      lt: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
     };
-  } else if (dateRange) {
-    // Handle predefined date ranges like 'today', 'this-week', etc.
-    const now = new Date();
-    switch (dateRange) {
-      case 'today':
-        where.tranDate = {
-          gte: new Date(now.setHours(0, 0, 0, 0)),
-          lte: new Date(now.setHours(23, 59, 59, 999)),
-        };
-        break;
-      case 'yesterday':
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        where.tranDate = {
-          gte: new Date(yesterday.setHours(0, 0, 0, 0)),
-          lte: new Date(yesterday.setHours(23, 59, 59, 999)),
-        };
-        break;
-      case 'this-week':
-        const firstDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-        const lastDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
-        where.tranDate = {
-          gte: new Date(firstDayOfWeek.setHours(0, 0, 0, 0)),
-          lte: new Date(lastDayOfWeek.setHours(23, 59, 59, 999)),
-        };
-        break;
-      case 'this-month':
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        where.tranDate = {
-          gte: firstDayOfMonth,
-          lte: lastDayOfMonth,
-        };
-        break;
-      case 'this-year':
-        const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
-        const lastDayOfYear = new Date(now.getFullYear(), 11, 31);
-        where.tranDate = {
-          gte: firstDayOfYear,
-          lte: lastDayOfYear,
-        };
-        break;
-      default:
-        // 'all-time' or any other unhandled cases
-        break;
-    }
-  }
-
-  // Adjust transaction type filtering
-  if (category === 'exchange') {
-    // For exchange transactions
-    if (transactionType !== 'both') {
-      where.exchangeType = transactionType;
-    }
-  } else {
-    // For regular transactions
-    if (transactionType === 'in' || transactionType === 'out') {
-      where.amountType = transactionType;
-    }
   }
 
   try {
     const transactions = await prisma.transaction.findMany({
-      where,
+      where: transactionWhere,
       include: {
-        user: true,
         category: true,
+        user: true,
+        account: {
+          select: {
+            account: true,
+            id: true,
+          }
+        }
       },
     });
 
-    if (category === 'exchange') {
-      // Aggregate data for exchange transactions
-      const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
-      const transactionCount = transactions.length;
+    const creditTotal = transactions
+      .filter(t => t.acc === 'Cr')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-      const report = {
-        totalAmount,
-        transactionCount,
-        transactions,
-      };
+    const debitTotal = transactions
+      .filter(t => t.acc === 'Dr')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-      return NextResponse.json(report);
-    } else {
-      // Aggregate data for regular transactions
-      let report = {
-        cashIn: 0,
-        cashOut: 0,
-        digitalIn: 0,
-        digitalOut: 0,
-        totalIn: 0,
-        totalOut: 0,
-      };
+    const cashTotal = transactions
+      .filter(t => t.type === 'cash')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-      transactions.forEach((t) => {
-        if (t.type === 'cash') {
-          if (t.amountType === 'in') report.cashIn += t.amount;
-          else if (t.amountType === 'out') report.cashOut += t.amount;
-        } else if (t.type === 'digital') {
-          if (t.amountType === 'in') report.digitalIn += t.amount;
-          else if (t.amountType === 'out') report.digitalOut += t.amount;
-        }
-        if (t.amountType === 'in') report.totalIn += t.amount;
-        else if (t.amountType === 'out') report.totalOut += t.amount;
-      });
+    const digitalTotal = transactions
+      .filter(t => t.type === 'digital')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-      return NextResponse.json(report);
-    }
+    const totalAmount = cashTotal + digitalTotal;
+    const transactionCount = transactions.length;
+
+    const response = {
+      creditTotal,
+      debitTotal,
+      cashTotal,
+      digitalTotal,
+      totalAmount,
+      transactionCount,
+      transactions,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Error fetching transactions' }, { status: 500 });
+    console.error("Error fetching transactions:", error);
+    return NextResponse.json({ error: "Error fetching transaction data." }, { status: 500 });
   }
 }

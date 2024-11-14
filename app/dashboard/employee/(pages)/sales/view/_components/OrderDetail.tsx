@@ -113,7 +113,7 @@ const OrderView = ({ order }: { order: any }) => {
 
       {/* Order header */}
       <div className="mb-6 bg-white p-6 rounded-lg shadow-md border border-gray-300 w-full">
-        <h1 className="text-xl md:text-2xl font-semibold mb-2">Order #{order.id}</h1>
+        <h1 className="text-xl md:text-2xl font-semibold mb-2">Order #{order.orderId}</h1>
         <p className="text-sm text-gray-600">
           Sold by: <strong>{order.user.name}</strong> (
           <a

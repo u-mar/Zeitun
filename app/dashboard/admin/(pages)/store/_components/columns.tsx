@@ -27,14 +27,14 @@ export const columns: ColumnDef<Account>[] = [
   },
   {
     accessorKey: "balance",
-    header: "mPesa balance",
+    header: "Digital balances",
     cell: ({ row }) => {
       return <span className="text-gray-700 font-semibold">{row.original.balance.toFixed(2)}</span>; // Format total price
     },
   },
   {
     accessorKey: "cashBalance",
-    header: "Cash Balance",
+    header: "Cash Balances",
     cell: ({ row }) => {
       return <span className="text-gray-700 font-semibold">{row.original.cashBalance.toFixed(2)}</span>; // Format total price
     },

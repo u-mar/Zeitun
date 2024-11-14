@@ -143,7 +143,6 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
     checkCategoryType();
   }, [watchCategory]);
 
-  console.log(form.formState.errors);
 
   const onSubmit = async (values: z.infer<typeof transactionSchema>) => {
     // Convert tranDate to a full ISO format before sending to Prisma
@@ -151,7 +150,6 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
       ? new Date(values.tranDate).toISOString()
       : new Date().toISOString();
     setLoading(true);
-    console.log('values', values);
     try {
       const response = transaction
         ? await axios.patch(`${API}/admin/transaction/${transaction.id}`, {

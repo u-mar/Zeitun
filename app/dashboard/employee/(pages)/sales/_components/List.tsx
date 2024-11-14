@@ -20,7 +20,6 @@ export default function List() {
   if (isLoading) {
     return <Loading />;
   }
-
   if (isError || !data) {
     return <div>Error loading orders.</div>;
   }

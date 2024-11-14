@@ -39,7 +39,6 @@ const AddDebtPaymentForm = ({ debtPayment }: { debtPayment?: DebtPayment }) => {
   // Extract debtId from URL
   const searchParams = useSearchParams()
   const debtId = searchParams.get('debtId')
-  console.log('debtId', debtId)
 
   // Form references
   const cashAmountRef = useRef<HTMLInputElement | null>(null);
@@ -74,13 +73,11 @@ const AddDebtPaymentForm = ({ debtPayment }: { debtPayment?: DebtPayment }) => {
     const digitalAmt = parseFloat((values.digitalAmount?.toString() || "0")) || 0;
     const totalAmount = cashAmt + digitalAmt;
   
-    console.log('values', values);
 
     if (totalAmount <= 0) {
       toast.error("Total payment amount must be greater than zero");
       return;
     }
-    console.log('values', values);
   
     setLoading(true);
     try {

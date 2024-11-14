@@ -3,6 +3,8 @@ import { Product, Variant, SKU, SellItem, Sell, Category } from "@prisma/client"
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'; // For status icons
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import Pagination from "@/app/dashboard/_components/Pagination";
+import { useState } from "react";
 
 interface ProductDetailProps {
   product: Product & {
@@ -20,7 +22,15 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ product }: ProductDetailProps) {
   const router = useRouter();
+  const itemsPerPage = 25; // Define items per page for pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
+// Pagination data slicing
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentSoldProducts = product ? product.orderItem.slice(indexOfFirstItem, indexOfLastItem) : [];
+
+const handlePageChange = (page: number) => setCurrentPage(page);
   return (
     <div className="container mx-auto p-6 bg-gray-100">
        <div className="mb-6">
@@ -97,6 +107,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       <div className="bg-white p-6 rounded-lg shadow-lg overflow-x-auto">
         <h2 className="text-xl font-bold mb-4 text-green-600">Sales History</h2>
         {product.orderItem.length > 0 ? (
+          <>
           <table className="w-full text-left table-auto border-collapse shadow-lg rounded-lg">
             <thead className="bg-gray-100">
               <tr>
@@ -109,12 +120,12 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </tr>
             </thead>
             <tbody>
-              {product.orderItem.map((sellItem, index) => (
+              {currentSoldProducts.map((sellItem, index) => (
                 <tr key={sellItem.id} className="hover:bg-gray-100 transition-colors">
                   <td className="px-4 py-2 border">{index + 1}</td> {/* Display index (N/O) */}
                   <td className="px-4 py-2 border">{sellItem.quantity}</td>
-                  <td className="px-4 py-2 border">${sellItem.price}</td>
-                  <td className="px-4 py-2 border">${sellItem.quantity * sellItem.price}</td>
+                  <td className="px-4 py-2 border">{sellItem.price}</td>
+                  <td className="px-4 py-2 border">{sellItem.quantity * sellItem.price}</td>
                   <td className="px-4 py-2 border">{new Date(sellItem.sell.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 border">
                     {sellItem.sell.status === "pending" ? (
@@ -131,6 +142,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               ))}
             </tbody>
           </table>
+          <Pagination
+                  totalItems={product.orderItem.length}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={handlePageChange}
+                />
+          </>
         ) : (
           <p className="text-red-500">No sales history for this product.</p>
         )}

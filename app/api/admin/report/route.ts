@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: Request) {
+
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
   const product = searchParams.get("product");
@@ -45,9 +46,7 @@ export async function GET(request: Request) {
 
   // Apply category filter
   if (category !== "all") {
-    sellItemWhere.product = {
-      categoryId: category,
-    };
+    sellItemWhere.product = { categoryId: category };
   }
 
   // Apply product filter
@@ -108,7 +107,7 @@ export async function GET(request: Request) {
     };
   }
 
-  // Handle the case of 'this-week'
+  // Handle 'this-week' filter
   if (dateRange === "this-week") {
     const weekStart = new Date();
     weekStart.setDate(currentDate.getDate() - currentDate.getDay()); // Get the start of the week (Sunday)
@@ -149,43 +148,55 @@ export async function GET(request: Request) {
       include: {
         items: {
           include: {
-            product: true, // Include product data to access the cost price
+            product: true, // Include product data to access the original price
           },
         },
       },
     });
 
-    // Calculate totals and profit
+    // Calculate totals and prepare sold products data
     let totalRevenue = 0;
     let totalCost = 0;
     let cashAmount = 0;
     let digitalAmount = 0;
 
-    sells.forEach((sell) => {
+    const soldProducts = sells.flatMap((sell) => {
       cashAmount += sell.cashAmount || 0;
       digitalAmount += sell.digitalAmount || 0;
-      sell.items.forEach((item) => {
+
+      return sell.items.map((item) => {
         const revenue = item.price * item.quantity; // Selling price * quantity
-        const cost = (item.product?.price || 0) * item.quantity; // Cost price * quantity
+        const cost = (item.product?.price || 0) * item.quantity; // Original product price * quantity
         totalRevenue += revenue;
         totalCost += cost;
+
+        return {
+          productName: item.product?.name || "Unknown",
+          productPrice: item.product?.price || 0, // Original product price
+          sellPrice: item.price, // Price at which it was sold
+          quantitySold: item.quantity,
+          profit: revenue - cost,
+          saleDate: sell.createdAt, // Sale date
+        };
       });
     });
 
     const profit = totalRevenue - totalCost;
     const totalAmount = cashAmount + digitalAmount;
     const orderCount = sells.length;
-    const quantityCount = sells.reduce((totalItems, sell) => {
-      return totalItems + sell.items.reduce((sum, item) => sum + item.quantity, 0);
-    }, 0);
+    const quantityCount = sells.reduce(
+      (totalItems, sell) => totalItems + sell.items.reduce((sum, item) => sum + item.quantity, 0),
+      0
+    );
 
     return NextResponse.json({
       cashAmount,
       digitalAmount,
       totalAmount,
-      profit, // Add profit to the response
+      profit,
       orderCount,
       quantityCount,
+      soldProducts, // Include sold products in the response
       selectedCategory: category === "all" ? "All Categories" : category,
       selectedProduct: product === "all" ? "All Products" : product,
       selectedUser: user === "all" ? "All Users" : user,
@@ -198,4 +209,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

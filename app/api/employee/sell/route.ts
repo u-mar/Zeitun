@@ -6,6 +6,17 @@ import { User } from "@prisma/client";
 
 const MAX_RETRIES = 3; // Retry up to 3 times in case of transient errors
 
+
+async function generateOrderId() {
+  const lastSell = await prisma.sell.findFirst({
+    orderBy: { createdAt: 'desc' },
+    select: { orderId: true },
+  });
+
+  const lastOrderNumber = lastSell?.orderId ? parseInt(lastSell.orderId.split('-')[1]) : 0;
+  return `ORD-${String(lastOrderNumber + 1).padStart(4, '0')}`;
+}
+
 export async function POST(request: NextRequest) {
   if (request.headers.get("content-length") === "0") {
     return NextResponse.json(
@@ -138,6 +149,7 @@ export async function POST(request: NextRequest) {
           const createdSell = await transactionPrisma.sell.create({
             data: {
               userId: userId,
+              orderId: await generateOrderId(), // Auto-generate orderId here
               total: totalAmount,
               cashAmount: type === "both" ? cashAmount : undefined,
               digitalAmount: type === "both" ? digitalAmount : undefined,
@@ -217,6 +229,7 @@ export async function GET(request: NextRequest) {
       include: {
         items: {
           include: {
+            product: true,
             sku: {
               select: {
                 size: true,

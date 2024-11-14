@@ -11,6 +11,8 @@ import {
   Send,
   Group,
   MonitorUp,
+  ArrowRightLeft,
+  Landmark,
 } from "lucide-react";
 // import SidebarItem from "./item";
 import Link from "next/link";
@@ -60,6 +62,16 @@ const adminRoutes = [
         icon: Send,
       },
       {
+        name: "Swap",
+        path: "/dashboard/admin/swap",
+        icon: ArrowRightLeft,
+      },
+      {
+        name: "Bank",
+        path: "/dashboard/admin/bank",
+        icon: Landmark,
+      },
+      {
         name: "Debts",
         path: "/dashboard/admin/debt",
         icon: MonitorUp,
@@ -72,10 +84,18 @@ const adminRoutes = [
             name: "Orders Report",
             path: "/dashboard/admin/report",
           },
-          // {
-          //   name: "Transactions Report",
-          //   path: "/dashboard/admin/report/transaction",
-          // },
+          {
+            name: "Products Report",
+            path: "/dashboard/admin/report/product",
+          },
+          {
+            name: "Transactions Report",
+            path: "/dashboard/admin/report/transaction",
+          },
+          {
+            name: "Exchange Report",
+            path: "/dashboard/admin/report/exchange",
+          },
         ],
       },
       {
