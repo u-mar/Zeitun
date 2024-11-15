@@ -24,6 +24,12 @@ export default withAuth(
         request.nextUrl.pathname.startsWith("/dashboard/admin") &&
         userRole !== "admin"
       ) {
+        return NextResponse.redirect(new URL("/dashboard/viewer", request.url));
+      }
+      if (
+        request.nextUrl.pathname.startsWith("/dashboard/viewer") &&
+        userRole !== "viewer"
+      ) {
         return NextResponse.redirect(
           new URL("/dashboard/employee", request.url)
         );
@@ -47,9 +53,11 @@ export default withAuth(
 export const config = {
   matcher: [
     "/dashboard/employee/:path*",
+    "/dashboard/viewer/:path*",
     "/dashboard/admin/:path*",
     "/auth/signIn",
     "/api/admin/:path*",
+    "/api/viewer/:path*",
     "/api/employee/:path*",
   ],
 };

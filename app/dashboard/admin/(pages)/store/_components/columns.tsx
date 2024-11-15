@@ -65,12 +65,6 @@ export const columns: ColumnDef<Account>[] = [
 
       return (
         <div className="flex items-center space-x-2">
-          {/* View Button */}
-          <Link href={`/dashboard/admin/store/view/${account.id}`}>
-            <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
-              View
-            </button>
-          </Link>
 
           {/* Edit Button */}
           <Link

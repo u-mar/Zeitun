@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { API } from '@/lib/config';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -28,7 +29,7 @@ const ProfitByCategory = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `/api/admin/dashboard/profit-by-category?period=${selectedPeriod}`
+        `${API}/admin/dashboard/profit-by-category?period=${selectedPeriod}`
       );
       const apiData = response.data;
 

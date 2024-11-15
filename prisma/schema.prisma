@@ -223,6 +223,7 @@ enum TransactionType {
 enum UserRole {
   admin
   employee
+  viewer
 }
 
 model Debt {

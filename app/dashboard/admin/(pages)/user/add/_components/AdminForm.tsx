@@ -32,7 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const userSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["employee", "admin"]),
+  role: z.enum(["employee", "admin", "viewer"]),
   phoneNumber: z.string().min(10, "Phone number is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
@@ -169,6 +169,7 @@ const UserRegisterForm = ({ user }: { user?: User }) => {
                       >
                         <option value="employee">Employee</option>
                         <option value="admin">Admin</option>
+                        <option value="viewer">Viewer</option>
                       </select>
                     </FormControl>
                     <FormMessage />

@@ -126,6 +126,105 @@ const adminRoutes = [
     ],
   },
 ];
+const viewerRoutes = [
+  {
+    title: "DISCOVER",
+    items: [
+      {
+        name: "Dashboard",
+        path: "/dashboard/viewer",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    title: "INVENTORY",
+    items: [
+      {
+        name: "Products",
+        path: "/dashboard/viewer/product",
+        icon: Package,
+      },
+      {
+        name: "Category",
+        path: "/dashboard/viewer/product/category",
+        icon: Group,
+      },
+      {
+        name: "Orders",
+        path: "/dashboard/viewer/sales",
+        icon: ShoppingCart,
+      },
+    ],
+  },
+  {
+    title: "FINANCES",
+    items: [
+      {
+        name: "Transactions",
+        path: "/dashboard/viewer/transaction",
+        icon: Send,
+      },
+      {
+        name: "Swap",
+        path: "/dashboard/viewer/swap",
+        icon: ArrowRightLeft,
+      },
+      {
+        name: "Bank",
+        path: "/dashboard/viewer/bank",
+        icon: Landmark,
+      },
+      {
+        name: "Report",
+        icon: BarChart2,
+        subItems: [ // Add sub-items directly within the route
+          {
+            name: "Orders Report",
+            path: "/dashboard/viewer/report",
+          },
+          {
+            name: "Products Report",
+            path: "/dashboard/viewer/report/product",
+          },
+          {
+            name: "Transactions Report",
+            path: "/dashboard/viewer/report/transaction",
+          },
+          {
+            name: "Exchange Report",
+            path: "/dashboard/viewer/report/exchange",
+          },
+        ],
+      },
+      {
+        name: "Store",
+        path: "/dashboard/viewer/store",
+        icon: Store,
+      },
+    ],
+  },
+  {
+    title: "SETTINGS",
+    items: [
+      {
+        name: "User",
+        path: "/dashboard/viewer/user",
+        icon: User,
+      },
+      {
+        name: "Settings",
+        path: "/dashboard/viewer/setting",
+        icon: Settings,
+      },
+      {
+        name: "Help",
+        path: "/help",
+        icon: HelpCircle,
+      },
+    ],
+  },
+];
 
 
 const employeeRoutes = [
@@ -177,7 +276,7 @@ const employeeRoutes = [
 
 
 const SidebarRoutes = ({ role }: { role: string }) => {
-  const routes = role === "admin" ? adminRoutes : employeeRoutes;
+  const routes = role === "admin" ? adminRoutes : role === "employee" ? employeeRoutes : viewerRoutes;
 
 
   return (
