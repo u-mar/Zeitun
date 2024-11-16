@@ -12,6 +12,7 @@ type User = {
 type ExchangeTransaction = {
     id: string;
     exchangeType: string;
+    amount: string;
     account: {
         id: string;
         account: string;
@@ -230,6 +231,7 @@ export default function ExchangeReport() {
                                 <tr className="bg-gray-100">
                                     <th className="py-3 px-6 border-b font-medium text-gray-700">Exchange Type</th>
                                     <th className="py-3 px-6 border-b font-medium text-gray-700">Account Type</th>
+                                    <th className="py-3 px-6 border-b font-medium text-gray-700">Amount</th>
                                     <th className="py-3 px-6 border-b font-medium text-gray-700">Sender Name</th>
                                     <th className="py-3 px-6 border-b font-medium text-gray-700">Sender Phone</th>
                                     <th className="py-3 px-6 border-b font-medium text-gray-700">Receiver Name</th>
@@ -241,11 +243,12 @@ export default function ExchangeReport() {
                                 {currentTransactions.map((transaction) => (
                                     <tr key={transaction.id} className="hover:bg-gray-50 text-center">
                                         <td className="py-3 px-6 border-b">{transaction.exchangeType}</td>
-                                        <td className="py-3 px-6 border-b">{transaction.account.account || 'N/A'}</td>
-                                        <td className="py-3 px-6 border-b">{transaction.senderName || "N/A"}</td>
-                                        <td className="py-3 px-6 border-b">{transaction.senderPhone || "N/A"}</td>
-                                        <td className="py-3 px-6 border-b">{transaction.receiverName || "N/A"}</td>
-                                        <td className="py-3 px-6 border-b">{transaction.receiverPhone || "N/A"}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.account.account}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.amount}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.senderName || "-"}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.senderPhone || "-"}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.receiverName || "-"}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.receiverPhone || "-"}</td>
                                         <td className="py-3 px-6 border-b">
                                             {new Date(transaction.tranDate).toLocaleDateString("en-US")}
                                         </td>

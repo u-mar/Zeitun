@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
+import { useForm, useFieldArray, SubmitHandler, Controller } from "react-hook-form";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { API } from "@/lib/config";
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Product, Type } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import Select from "react-select"; // Import react-select
+
 
 interface SKU {
   id: string;
@@ -87,7 +89,14 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { register, control, handleSubmit, watch, setValue, formState: { isValid } } = useForm<FormValues>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { isValid },
+  } = useForm<FormValues>({
     defaultValues: order
       ? {
         products: order.items.map((item) => ({
@@ -138,13 +147,24 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
 
   useEffect(() => {
     if (accounts) {
-      const defaultAcc = accounts.find(account => account.default);
+      const defaultAcc = accounts.find((account) => account.default);
       if (defaultAcc) {
         setDefaultAccount(defaultAcc);
         setValue("accountId", defaultAcc.id);
       }
     }
   }, [accounts, setValue]);
+
+  // Automatically update cash/digital to match total
+  useEffect(() => {
+    if (watchCashAmount) {
+      const remainingDigitalAmount = (Number(totalAmount) - Number(watchCashAmount)).toFixed(2);
+      setValue("digitalAmount", Number(remainingDigitalAmount));
+    } else if (watchDigitalAmount) {
+      const remainingCashAmount = (Number(totalAmount) - Number(watchDigitalAmount)).toFixed(2);
+      setValue("cashAmount", Number(remainingCashAmount));
+    }
+  }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
 
   // Set selected variants and SKUs if in edit mode
   useEffect(() => {
@@ -192,11 +212,12 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
 
   useEffect(() => {
     const subscription = watch((values) => {
-      const total = (values.products ?? []).reduce(
-        (acc, item) =>
-          acc + Number(item?.price || 0) * Number(item?.quantity || 0),
-        0
-      ).toFixed(2);
+      const total = (values.products ?? [])
+        .reduce(
+          (acc, item) => acc + Number(item?.price || 0) * Number(item?.quantity || 0),
+          0
+        )
+        .toFixed(2);
       setTotalAmount(total);
     });
 
@@ -206,8 +227,13 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
 
   // Validate form fields and conditions for submit button
   useEffect(() => {
-    const isProductsValid = watchProducts.every((item) => item.productId && item.variantId && item.skuId && item.price > 0 && item.quantity > 0);
-    const isCashDigitalValid = (Number(watchCashAmount) + Number(watchDigitalAmount)) === Number(totalAmount);
+    const isProductsValid = watchProducts.every(
+      (item) => item.productId && item.variantId && item.skuId && item.price > 0 && item.quantity > 0
+    );
+    const isCashDigitalValid =
+      Number(watchCashAmount) >= 0 &&
+      Number(watchDigitalAmount) >= 0 &&
+      Number(watchCashAmount) + Number(watchDigitalAmount) === Number(totalAmount);
     const isFormValid = isProductsValid && isCashDigitalValid && isValid;
 
     setIsSubmitDisabled(!isFormValid);
@@ -216,6 +242,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   const handleWheel = (event: React.WheelEvent<HTMLInputElement>) => {
     event.currentTarget.blur();
   };
+
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const outOfStockItems = data.products.filter(
       (item) => item.quantity > (item.stock || 0)
@@ -258,16 +285,23 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       }
       setLoading(false);
       router.push("/dashboard/employee/sales");
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
-      toast.error("Error saving order. Please try again.");
+      const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+      toast.error(errorMessage);
     }
   };
+
+  // Prepare product options for react-select
+  const productOptions = products?.map((product) => ({
+    value: product.id,
+    label: product.name,
+  }));
 
   return (
     <div className="container mx-auto my-10 p-6 bg-white rounded-md shadow-lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto md:overflow-x-visible">
           <table className="min-w-full bg-white">
             <thead>
               <tr className="text-gray-600 uppercase text-sm leading-normal">
@@ -284,18 +318,30 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
               {fields.map((field, index) => (
                 <tr key={field.id} className="border-b border-gray-200">
                   <td className="p-2 border">
-                    <select
-                      className="w-full border border-gray-300 rounded-md p-1"
-                      value={watchProducts[index]?.productId || ""}
-                      onChange={(e) => handleProductSelect(index, e.target.value)}
-                    >
-                      <option value="">Select Product</option>
-                      {products?.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      control={control}
+                      name={`products.${index}.productId`}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          options={productOptions}
+                          onChange={(selectedOption) => {
+                            field.onChange(selectedOption?.value || "");
+                            handleProductSelect(index, selectedOption?.value || null);
+                          }}
+                          value={productOptions?.find((option) => option.value === field.value) || null}
+                          placeholder="Select Product"
+                          isClearable
+                          styles={{
+                            control: (provided) => ({
+                              ...provided,
+                              borderColor: "rgb(209 213 219)", // Tailwind gray-300
+                              borderRadius: "0.375rem", // Tailwind rounded-md
+                            }),
+                          }}
+                        />
+                      )}
+                    />
                   </td>
 
                   <td className="p-2 border">
@@ -333,7 +379,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                       type="number"
                       onWheel={handleWheel}
                       className="w-full border p-1 rounded-md"
-                      placeholder={`Price: ${watchProducts[index]?.price || ''}`}
+                      placeholder={`Price: ${watchProducts[index]?.price || ""}`}
                       {...register(`products.${index}.price`)}
                       onFocus={(e) => (e.target.value = "")}
                     />
@@ -349,7 +395,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                   </td>
 
                   <td className="p-2 border">
-                    {(Number(watchProducts[index]?.price || 0) * Number(watchProducts[index]?.quantity || 0)).toFixed(2)}
+                    {(
+                      Number(watchProducts[index]?.price || 0) *
+                      Number(watchProducts[index]?.quantity || 0)
+                    ).toFixed(2)}
                   </td>
 
                   <td className="p-2 border text-center">
@@ -361,7 +410,11 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
               ))}
             </tbody>
           </table>
-          <Button type="button" onClick={() => append({ productId: "", name: "", price: 0, quantity: 1 })} className="mt-4">
+          <Button
+            type="button"
+            onClick={() => append({ productId: "", name: "", price: 0, quantity: 1 })}
+            className="mt-4"
+          >
             Add Product
           </Button>
         </div>
@@ -370,7 +423,12 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
         {defaultAccount && (
           <div className="space-y-2 mt-4">
             <label>Select Account</label>
-            <select className="border p-2 rounded-md w-full" value={defaultAccount.id} {...register("accountId")} disabled>
+            <select
+              className="border p-2 rounded-md w-full"
+              value={defaultAccount.id}
+              {...register("accountId")}
+              disabled
+            >
               <option value={defaultAccount.id}>
                 {defaultAccount.account} (Default)
               </option>
@@ -378,25 +436,51 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <label>Cash Amount</label>
+        {/* Conditional Inputs for Cash and Digital Amounts */}
+        <div className="flex flex-wrap -mx-2">
+          <div className="w-full md:w-1/2 px-2 mb-4">
+            <label className="block text-gray-700 font-semibold mb-2">Cash Amount</label>
             <input
               type="number"
-              onWheel={handleWheel}
-              className="w-full border p-2 rounded-md"
-              {...register("cashAmount")}
+              min="0"
+              max={totalAmount}
+              value={watchCashAmount || ""}
+              onChange={(e) => {
+                let cashAmount = parseFloat(e.target.value);
+                if (isNaN(cashAmount) || cashAmount < 0) cashAmount = 0;
+                const total = totalAmount;
+                if (cashAmount > Number(total)) cashAmount = Number(total);
+                const digitalAmount = Number(total) - cashAmount;
+                setValue("cashAmount", cashAmount);
+                setValue("digitalAmount", digitalAmount);
+              }}
+              className="border border-gray-300 p-2 rounded-md w-full"
               placeholder="Enter cash amount"
+              onWheel={(e) => e.currentTarget.blur()}
             />
           </div>
-          <div>
-            <label>Digital Amount</label>
+
+          <div className="w-full md:w-1/2 px-2 mb-4">
+            <label className="block text-gray-700 font-semibold mb-2">
+              Digital Amount
+            </label>
             <input
               type="number"
-              onWheel={handleWheel}
-              className="w-full border p-2 rounded-md"
-              {...register("digitalAmount")}
+              min="0"
+              max={totalAmount}
+              value={watchDigitalAmount || ""}
+              onChange={(e) => {
+                let digitalAmount = parseFloat(e.target.value);
+                if (isNaN(digitalAmount) || digitalAmount < 0) digitalAmount = 0;
+                const total = totalAmount;
+                if (digitalAmount > Number(total)) digitalAmount = Number(total);
+                const cashAmount = Number(total) - digitalAmount;
+                setValue("digitalAmount", digitalAmount);
+                setValue("cashAmount", cashAmount);
+              }}
+              className="border border-gray-300 p-2 rounded-md w-full"
               placeholder="Enter digital amount"
+              onWheel={(e) => e.currentTarget.blur()}
             />
           </div>
         </div>
@@ -405,8 +489,18 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           <p className="text-lg font-semibold">Subtotal: {totalAmount}</p>
         </div>
 
-        <Button type="submit" disabled={loading || isSubmitDisabled} className="w-full bg-blue-600 text-white font-bold py-2 rounded-md mt-6">
-          {loading ? <Loader2 className="animate-spin h-5 w-5 mx-2" /> : order ? "Update Order" : "Create Order"}
+        <Button
+          type="submit"
+          disabled={loading || isSubmitDisabled}
+          className="w-full bg-blue-600 text-white font-bold py-2 rounded-md mt-6"
+        >
+          {loading ? (
+            <Loader2 className="animate-spin h-5 w-5 mx-2" />
+          ) : order ? (
+            "Update Order"
+          ) : (
+            "Create Order"
+          )}
         </Button>
       </form>
       <Toaster />
