@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
 
-  const categories = await prisma.accounts.findMany({
+  const accounts = await prisma.accounts.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       transactions: true,
     }
   });
-  return NextResponse.json(categories, { status: 200 });
+  return NextResponse.json(accounts, { status: 200 });
 }

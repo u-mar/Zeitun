@@ -299,12 +299,13 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   }));
 
   return (
-    <div className="container mx-auto my-10 p-6 bg-white rounded-md shadow-lg">
+    <div className="container  my-10 p-6 bg-gray-50 rounded-lg shadow-xl">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-800">Order Form</h1>
         <div className="overflow-x-auto md:overflow-x-visible">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="text-gray-600 uppercase text-sm leading-normal">
+          <table className="min-w-full bg-white border border-gray-200 rounded-md">
+            <thead className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+              <tr>
                 <th className="py-3 px-6 text-left">Product</th>
                 <th className="py-3 px-6 text-left">Variant</th>
                 <th className="py-3 px-6 text-left">SKU</th>
@@ -316,8 +317,12 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             </thead>
             <tbody>
               {fields.map((field, index) => (
-                <tr key={field.id} className="border-b border-gray-200">
-                  <td className="p-2 border">
+                <tr
+                  key={field.id}
+                  className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                    } hover:bg-gray-100`}
+                >
+                  <td className="p-4 border">
                     <Controller
                       control={control}
                       name={`products.${index}.productId`}
@@ -329,14 +334,18 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                             field.onChange(selectedOption?.value || "");
                             handleProductSelect(index, selectedOption?.value || null);
                           }}
-                          value={productOptions?.find((option) => option.value === field.value) || null}
+                          value={
+                            productOptions?.find(
+                              (option) => option.value === field.value
+                            ) || null
+                          }
                           placeholder="Select Product"
                           isClearable
                           styles={{
                             control: (provided) => ({
                               ...provided,
-                              borderColor: "rgb(209 213 219)", // Tailwind gray-300
-                              borderRadius: "0.375rem", // Tailwind rounded-md
+                              borderColor: "rgb(209 213 219)",
+                              borderRadius: "0.375rem",
                             }),
                           }}
                         />
@@ -344,9 +353,9 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     />
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="p-4 border">
                     <select
-                      className="w-full border border-gray-300 rounded-md p-1"
+                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-400"
                       value={watchProducts[index]?.variantId || ""}
                       onChange={(e) => handleVariantSelect(index, e.target.value)}
                     >
@@ -359,9 +368,9 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     </select>
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="p-4 border">
                     <select
-                      className="w-full border border-gray-300 rounded-md p-1"
+                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-400"
                       value={watchProducts[index]?.skuId || ""}
                       onChange={(e) => handleSkuSelect(index, e.target.value)}
                     >
@@ -374,35 +383,39 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     </select>
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="p-4 border">
                     <input
                       type="number"
                       onWheel={handleWheel}
-                      className="w-full border p-1 rounded-md"
+                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-400"
                       placeholder={`Price: ${watchProducts[index]?.price || ""}`}
                       {...register(`products.${index}.price`)}
                       onFocus={(e) => (e.target.value = "")}
                     />
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="p-4 border">
                     <input
                       type="number"
                       onWheel={handleWheel}
-                      className="w-full border p-1 rounded-md"
+                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-400"
                       {...register(`products.${index}.quantity`)}
                     />
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="p-4 border text-gray-700">
                     {(
                       Number(watchProducts[index]?.price || 0) *
                       Number(watchProducts[index]?.quantity || 0)
                     ).toFixed(2)}
                   </td>
 
-                  <td className="p-2 border text-center">
-                    <button type="button" onClick={() => remove(index)} className="text-red-500">
+                  <td className="p-4 border text-center">
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="text-red-500 hover:text-red-600 transition"
+                    >
                       ×
                     </button>
                   </td>
@@ -412,19 +425,20 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           </table>
           <Button
             type="button"
-            onClick={() => append({ productId: "", name: "", price: 0, quantity: 1 })}
-            className="mt-4"
+            onClick={() =>
+              append({ productId: "", name: "", price: 0, quantity: 1 })
+            }
+            className="mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-md transition"
           >
             Add Product
           </Button>
         </div>
 
-        {/* Account Selection */}
         {defaultAccount && (
           <div className="space-y-2 mt-4">
-            <label>Select Account</label>
+            <label className="text-gray-700 font-semibold">Select Account</label>
             <select
-              className="border p-2 rounded-md w-full"
+              className="border p-2 rounded-md w-full focus:ring-2 focus:ring-blue-400"
               value={defaultAccount.id}
               {...register("accountId")}
               disabled
@@ -436,10 +450,11 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           </div>
         )}
 
-        {/* Conditional Inputs for Cash and Digital Amounts */}
         <div className="flex flex-wrap -mx-2">
           <div className="w-full md:w-1/2 px-2 mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">Cash Amount</label>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Cash Amount
+            </label>
             <input
               type="number"
               min="0"
@@ -454,7 +469,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                 setValue("cashAmount", cashAmount);
                 setValue("digitalAmount", digitalAmount);
               }}
-              className="border border-gray-300 p-2 rounded-md w-full"
+              className="border border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
               placeholder="Enter cash amount"
               onWheel={(e) => e.currentTarget.blur()}
             />
@@ -478,7 +493,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                 setValue("digitalAmount", digitalAmount);
                 setValue("cashAmount", cashAmount);
               }}
-              className="border border-gray-300 p-2 rounded-md w-full"
+              className="border border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
               placeholder="Enter digital amount"
               onWheel={(e) => e.currentTarget.blur()}
             />
@@ -486,16 +501,18 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
         </div>
 
         <div className="text-right mt-4">
-          <p className="text-lg font-semibold">Subtotal: {totalAmount}</p>
+          <p className="text-lg font-semibold text-gray-800">
+            Subtotal: {totalAmount}
+          </p>
         </div>
 
         <Button
           type="submit"
           disabled={loading || isSubmitDisabled}
-          className="w-full bg-blue-600 text-white font-bold py-2 rounded-md mt-6"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md mt-6 transition"
         >
           {loading ? (
-            <Loader2 className="animate-spin h-5 w-5 mx-2" />
+            <Loader2 className="animate-spin h-5 w-5 mx-auto" />
           ) : order ? (
             "Update Order"
           ) : (
@@ -505,6 +522,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
       </form>
       <Toaster />
     </div>
+
   );
 };
 

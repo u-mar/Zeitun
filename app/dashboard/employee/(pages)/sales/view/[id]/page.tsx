@@ -10,6 +10,8 @@ const OrderViewPage = async ({ params }: { params: { id: string } }) => {
       include: {
         items: {
           select: {
+            quantity: true, // Include the quantity field
+            price: true,    // Include the price if needed
             product: {
               select: {
                 name: true,

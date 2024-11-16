@@ -96,6 +96,10 @@ const adminRoutes = [
             name: "Exchange Report",
             path: "/dashboard/admin/report/exchange",
           },
+          {
+            name: "Swaps Report",
+            path: "/dashboard/admin/report/swap",
+          },
         ],
       },
       {
@@ -194,6 +198,10 @@ const viewerRoutes = [
           {
             name: "Exchange Report",
             path: "/dashboard/viewer/report/exchange",
+          },
+          {
+            name: "Swaps Report",
+            path: "/dashboard/viewer/report/swap",
           },
         ],
       },
