@@ -44,7 +44,7 @@ export default function Accounts() {
               </div>
 
               {/* Account Type */}
-              <h2 className="text-xl font-bold text-gray-800 mb-3">{account.accountType}</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-3">{account.account}</h2>
 
               {/* Account Details */}
               <div className="mb-3">
