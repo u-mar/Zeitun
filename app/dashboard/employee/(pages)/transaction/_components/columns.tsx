@@ -153,6 +153,16 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const transaction = row.original;
 
+      const HOURS_48_IN_MILLISECONDS = 48 * 60 * 60 * 1000;
+
+      function isWithin48Hours(date: Date): boolean {
+        const currentTime = new Date().getTime();
+        const createdTime = new Date(date).getTime();
+        return currentTime - createdTime <= HOURS_48_IN_MILLISECONDS;
+      }
+
+      const within48Hours = isWithin48Hours(new Date(transaction.createdAt));
+
       return (
         <div className="flex items-center space-x-2">
           {/* View Button */}
@@ -163,17 +173,50 @@ export const columns: ColumnDef<Transaction>[] = [
           </Link>
 
           {/* Edit Button */}
-          <Link
-            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-            href={`/dashboard/employee/transaction/edit/${transaction.id}`}>
-            Edit
-          </Link>
+          <div
+            className={`${within48Hours ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+              }`}
+            title={
+              within48Hours
+                ? "Edit this transaction"
+                : "Editing disabled for transactions older than 48 hours"
+            }
+          >
+            {within48Hours ? (
+              <Link href={`/dashboard/employee/transaction/edit/${transaction.id}`}>
+                <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  Edit
+                </button>
+              </Link>
+            ) : (
+              <button className="px-3 py-1 bg-yellow-500 text-white rounded">
+                Edit
+              </button>
+            )}
+          </div>
+
           {/* Delete Button */}
-          <DeleteAlertDialog id={transaction.id} type="transaction" />
+          <div
+            className={`${within48Hours ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+              }`}
+            title={
+              within48Hours
+                ? "Delete this transaction"
+                : "Deleting disabled for transactions older than 48 hours"
+            }
+          >
+            {within48Hours ? (
+              <DeleteAlertDialog id={transaction.id} type="transaction" />
+            ) : (
+              <button className="px-3 py-1 bg-red-500 text-white rounded">
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       );
     },
-  },
+  }
 ];
 
 

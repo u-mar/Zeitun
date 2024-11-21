@@ -22,6 +22,109 @@ import { COMPANY_NAME } from "@/lib/config";
 import { RiTakeawayFill } from "react-icons/ri";
 
 
+const superAdminRoutes = [
+  {
+    title: "DISCOVER",
+    items: [
+      {
+        name: "Dashboard",
+        path: "/dashboard/superAdmin",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    title: "INVENTORY",
+    items: [
+      {
+        name: "Products",
+        path: "/dashboard/superAdmin/product",
+        icon: Package,
+      },
+      {
+        name: "Category",
+        path: "/dashboard/superAdmin/product/category",
+        icon: Group,
+      },
+      {
+        name: "Orders",
+        path: "/dashboard/superAdmin/sales",
+        icon: ShoppingCart,
+      },
+    ],
+  },
+  {
+    title: "FINANCES",
+    items: [
+      {
+        name: "Transactions",
+        path: "/dashboard/superAdmin/transaction",
+        icon: Send,
+      },
+      {
+        name: "Swap",
+        path: "/dashboard/superAdmin/swap",
+        icon: ArrowRightLeft,
+      },
+      {
+        name: "Bank",
+        path: "/dashboard/superAdmin/bank",
+        icon: Landmark,
+      },
+      {
+        name: "Report",
+        icon: BarChart2,
+        subItems: [ // Add sub-items directly within the route
+          {
+            name: "Orders Report",
+            path: "/dashboard/superAdmin/report",
+          },
+          {
+            name: "Products Report",
+            path: "/dashboard/superAdmin/report/product",
+          },
+          {
+            name: "Transactions Report",
+            path: "/dashboard/superAdmin/report/transaction",
+          },
+          {
+            name: "Exchange Report",
+            path: "/dashboard/superAdmin/report/exchange",
+          },
+          {
+            name: "Swaps Report",
+            path: "/dashboard/superAdmin/report/swap",
+          },
+        ],
+      },
+      {
+        name: "Store",
+        path: "/dashboard/superAdmin/store",
+        icon: Store,
+      },
+    ],
+  },
+  {
+    title: "SETTINGS",
+    items: [
+      {
+        name: "User",
+        path: "/dashboard/superAdmin/user",
+        icon: User,
+      },
+      {
+        name: "Settings",
+        path: "/dashboard/superAdmin/setting",
+        icon: Settings,
+      },
+      {
+        name: "Help",
+        path: "/help",
+        icon: HelpCircle,
+      },
+    ],
+  },
+];
 const adminRoutes = [
   {
     title: "DISCOVER",
@@ -70,11 +173,6 @@ const adminRoutes = [
         name: "Bank",
         path: "/dashboard/admin/bank",
         icon: Landmark,
-      },
-      {
-        name: "Debts",
-        path: "/dashboard/admin/debt",
-        icon: MonitorUp,
       },
       {
         name: "Report",
@@ -130,6 +228,8 @@ const adminRoutes = [
     ],
   },
 ];
+
+
 const viewerRoutes = [
   {
     title: "DISCOVER",
@@ -284,7 +384,7 @@ const employeeRoutes = [
 
 
 const SidebarRoutes = ({ role }: { role: string }) => {
-  const routes = role === "admin" ? adminRoutes : role === "employee" ? employeeRoutes : viewerRoutes;
+  const routes = role === "superAdmin" ? superAdminRoutes : role === "admin" ? adminRoutes : role === "employee" ? employeeRoutes : viewerRoutes;
 
 
   return (

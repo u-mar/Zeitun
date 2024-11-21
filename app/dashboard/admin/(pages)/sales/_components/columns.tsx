@@ -107,8 +107,16 @@ export const columns: ColumnDef<Order>[] = [
     header: "Action",
     cell: ({ row }) => {
       const order = row.original;
-      const router = useRouter();
-
+      const HOURS_48_IN_MILLISECONDS = 48 * 60 * 60 * 1000;
+  
+      function isWithin48Hours(date: Date): boolean {
+        const currentTime = new Date().getTime();
+        const createdTime = new Date(date).getTime();
+        return currentTime - createdTime <= HOURS_48_IN_MILLISECONDS;
+      }
+  
+      const within48Hours = isWithin48Hours(new Date(order.createdAt));
+  
       return (
         <div className="flex items-center space-x-2">
           {/* View Button */}
@@ -117,18 +125,57 @@ export const columns: ColumnDef<Order>[] = [
               View
             </button>
           </Link>
-
+  
           {/* Edit Button */}
-          <Link href={`/dashboard/admin/sales/edit/${order.id}`}>
-            <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-              Edit
-            </button>
-          </Link>
-
+          <div
+            className={`${
+              within48Hours
+                ? "cursor-pointer"
+                : "cursor-not-allowed opacity-50"
+            }`}
+            title={
+              within48Hours
+                ? "Edit this order"
+                : "Editing disabled for orders older than 48 hours"
+            }
+          >
+            {within48Hours ? (
+              <Link href={`/dashboard/admin/sales/edit/${order.id}`}>
+                <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  Edit
+                </button>
+              </Link>
+            ) : (
+              <button className="px-3 py-1 bg-yellow-500 text-white rounded">
+                Edit
+              </button>
+            )}
+          </div>
+  
           {/* Delete Button */}
-          <DeleteAlertDialog id={order.id} type="order" />
+          <div
+            className={`${
+              within48Hours
+                ? "cursor-pointer"
+                : "cursor-not-allowed opacity-50"
+            }`}
+            title={
+              within48Hours
+                ? "Delete this order"
+                : "Deleting disabled for orders older than 48 hours"
+            }
+          >
+            {within48Hours ? (
+              <DeleteAlertDialog id={order.id} type="order" />
+            ) : (
+              <button className="px-3 py-1 bg-red-500 text-white rounded">
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       );
     },
-  },
+  }
+  
 ];

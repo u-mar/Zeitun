@@ -46,19 +46,62 @@ export const columns: ColumnDef<Users>[] = [
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      const user = row.original
+      const user = row.original;
 
+      // Check if the user role is superAdmin
+      const isSuperAdmin = user.role === "superAdmin";
+console.log('isSuperAdmin', isSuperAdmin);
       return (
         <div className="flex items-center space-x-2">
           {/* Edit Button */}
-          <Link
-            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600" href={`/dashboard/admin/user/edit/${user.id}`}>
-            Edit
-          </Link>
+          <div
+            className={`${isSuperAdmin
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer"
+              }`}
+            title={
+              isSuperAdmin
+                ? "Editing is disabled for Super Admins"
+                : "Edit this user"
+            }
+          >
+            {isSuperAdmin ? (
+              <button className="px-3 py-1 bg-yellow-500 text-white rounded">
+                Edit
+              </button>
+            ) : (
+              <Link
+                href={`/dashboard/admin/user/edit/${user.id}`}
+                className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+              >
+                Edit
+              </Link>
+            )}
+          </div>
+
           {/* Delete Button */}
-          <DeleteAlertDialog id={user.id} type="user" />
+          <div
+            className={`${isSuperAdmin
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer"
+              }`}
+            title={
+              isSuperAdmin
+                ? "Deleting is disabled for Super Admins"
+                : "Delete this user"
+            }
+          >
+            {isSuperAdmin ? (
+              <button className="px-3 py-1 bg-red-500 text-white rounded">
+                Delete
+              </button>
+            ) : (
+              <DeleteAlertDialog id={user.id} type="user" />
+            )}
+          </div>
         </div>
-      )
-    }
+      );
+    },
   }
+
 ];

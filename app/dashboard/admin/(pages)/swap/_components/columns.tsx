@@ -88,6 +88,16 @@ export const columns: ColumnDef<Swap>[] = [
     cell: ({ row }) => {
       const swap = row.original;
 
+      const HOURS_48_IN_MILLISECONDS = 48 * 60 * 60 * 1000;
+
+      function isWithin48Hours(date: Date): boolean {
+        const currentTime = new Date().getTime();
+        const createdTime = new Date(date).getTime();
+        return currentTime - createdTime <= HOURS_48_IN_MILLISECONDS;
+      }
+
+      const within48Hours = isWithin48Hours(new Date(swap.createdAt));
+
       return (
         <div className="flex items-center space-x-2">
           {/* View Button */}
@@ -98,16 +108,48 @@ export const columns: ColumnDef<Swap>[] = [
           </Link>
 
           {/* Edit Button */}
-          <Link
-            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-            href={`/dashboard/admin/swap/edit/${swap.id}`}
+          <div
+            className={`${within48Hours ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+              }`}
+            title={
+              within48Hours
+                ? "Edit this swap"
+                : "Editing disabled for swaps older than 48 hours"
+            }
           >
-            Edit
-          </Link>
+            {within48Hours ? (
+              <Link href={`/dashboard/admin/swap/edit/${swap.id}`}>
+                <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  Edit
+                </button>
+              </Link>
+            ) : (
+              <button className="px-3 py-1 bg-yellow-500 text-white rounded">
+                Edit
+              </button>
+            )}
+          </div>
+
           {/* Delete Button */}
-          <DeleteAlertDialog id={swap.id} type="swap" />
+          <div
+            className={`${within48Hours ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+              }`}
+            title={
+              within48Hours
+                ? "Delete this swap"
+                : "Deleting disabled for swaps older than 48 hours"
+            }
+          >
+            {within48Hours ? (
+              <DeleteAlertDialog id={swap.id} type="swap" />
+            ) : (
+              <button className="px-3 py-1 bg-red-500 text-white rounded">
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       );
     },
-  },
+  }
 ];
