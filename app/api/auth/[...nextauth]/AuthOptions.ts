@@ -18,22 +18,63 @@ export const AuthOptions: NextAuthOptions = {
       authorize: async (credentials, req) => {
         if (!credentials) return null;
 
-  
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
-        if (user && credentials.password) {
-          const isValidPassword = await bcrypt.compare(credentials.password, user.password);
-
-          if (!isValidPassword) {
-            throw new Error("Invalid email or password");
-          }
-
-          return user;
+        if (!user) {
+          throw new Error("Invalid email or password");
         }
 
-        return null;
+        const currentTime = new Date();
+
+        // Check if user is locked out
+        if (user.lockoutUntil && currentTime < user.lockoutUntil) {
+          throw new Error(
+            `Account locked. Try again after ${user.lockoutUntil.toLocaleTimeString()}`
+          );
+        }
+
+        const isValidPassword = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isValidPassword) {
+          // Increment failed attempts
+          const failedAttempts = user.failedAttempts + 1;
+          const lockoutUntil =
+            failedAttempts >= 5
+              ? new Date(currentTime.getTime() + 15 * 60 * 1000) // 15 minutes lockout
+              : null;
+
+          await prisma.user.update({
+            where: { email: user.email! },
+            data: {
+              failedAttempts,
+              lockoutUntil,
+            },
+          });
+
+          if (lockoutUntil) {
+            throw new Error(
+              "Too many failed attempts. Try again in 15 minutes."
+            );
+          } else {
+            throw new Error("Invalid email or password");
+          }
+        }
+
+        // Reset failed attempts on successful login
+        await prisma.user.update({
+          where: { email: user.email! },
+          data: {
+            failedAttempts: 0,
+            lockoutUntil: null,
+          },
+        });
+
+        return user;
       },
     }),
   ],
