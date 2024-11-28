@@ -209,6 +209,7 @@ const AddTransactionForm = ({ transaction }: { transaction?: Transaction }) => {
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbers
                           placeholder="Enter transaction amount"
                           {...field}
                           value={field.value || ""}

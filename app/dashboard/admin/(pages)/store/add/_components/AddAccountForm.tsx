@@ -111,6 +111,7 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                     <FormControl>
                       <Input
                         type="number"
+                        step="any" // Allows decimal numbers
                         placeholder="Enter balance"
                         {...field}
                         ref={(e) => {
@@ -142,6 +143,7 @@ const AddAccountForm = ({ account }: { account?: Accounts }) => {
                     <FormControl>
                       <Input
                         type="number"
+                        step="any" // Allows decimal numbers
                         placeholder="Enter cash balance"
                         {...field}
                         ref={(e) => {

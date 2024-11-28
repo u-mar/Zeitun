@@ -161,6 +161,7 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbers
                           {...field}
                           onWheel={handleWheel}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -179,6 +180,7 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbers
                           {...field}
                           onWheel={handleWheel}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -204,6 +206,7 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbersv
                           {...field}
                           onWheel={handleWheel}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -222,6 +225,7 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbers
                           {...field}
                           onWheel={handleWheel}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -244,6 +248,7 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                         <Input
                           placeholder="Enter exchange rate"
                           type="number"
+                          step="any" // Allows decimal numbers
                           {...field}
                           onWheel={handleWheel}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}

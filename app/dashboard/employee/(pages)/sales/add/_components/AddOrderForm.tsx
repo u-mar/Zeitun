@@ -391,6 +391,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                   <td className="p-4 border">
                     <input
                       type="number"
+                      step="any" // Allows decimal numbers
                       onWheel={handleWheel}
                       className="w-full border border-gray-300 rounded-lg p-3 text-base sm:text-sm focus:ring-2 focus:ring-blue-400"
                       placeholder={`Price: ${watchProducts[index]?.price || ""}`}
@@ -472,6 +473,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             </label>
             <input
               type="number"
+              step="any" // Allows decimal numbers
               min="0"
               max={totalAmount}
               value={watchCashAmount || ""}
@@ -496,6 +498,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
             </label>
             <input
               type="number"
+              step="any" // Allows decimal numbers
               min="0"
               max={totalAmount}
               value={watchDigitalAmount || ""}

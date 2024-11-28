@@ -215,6 +215,7 @@ const AddProductForm = ({ product }: { product?: ProductWithVariants }) => {
                     <FormControl>
                       <Input
                         type="number"
+                        step="any" // Allows decimal numbers
                         placeholder="Enter product price"
                         {...field}
                         value={field.value || ""}

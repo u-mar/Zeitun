@@ -122,6 +122,7 @@ const AddPaymentForm = ({ bankTransaction }: { bankTransaction?: BankTransaction
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbers
                           placeholder="Enter cash amount"
                           {...field}
                           onWheel={handleWheel}
@@ -143,6 +144,7 @@ const AddPaymentForm = ({ bankTransaction }: { bankTransaction?: BankTransaction
                       <FormControl>
                         <Input
                           type="number"
+                          step="any" // Allows decimal numbers
                           placeholder="Enter digital amount"
                           {...field}
                           onWheel={handleWheel}
