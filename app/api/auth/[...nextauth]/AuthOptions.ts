@@ -1,10 +1,10 @@
-// lib/authOptions.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import prisma from "@/prisma/client";
 import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
 
 export const AuthOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -12,14 +12,27 @@ export const AuthOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text", placeholder: "jsmith" },
+        email: { label: "Email", type: "text", placeholder: "jsmith@example.com" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials, req) => {
+      authorize: async (credentials) => {
         if (!credentials) return null;
 
+        // Input validation
+        const schema = z.object({
+          email: z.string().email(),
+          password: z.string().min(8),
+        });
+
+        const parsed = schema.safeParse(credentials);
+        if (!parsed.success) {
+          throw new Error("Invalid input");
+        }
+
+        const { email, password } = parsed.data;
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!user) {
@@ -28,28 +41,24 @@ export const AuthOptions: NextAuthOptions = {
 
         const currentTime = new Date();
 
-        // Check if user is locked out
+        // Lockout mechanism
         if (user.lockoutUntil && currentTime < user.lockoutUntil) {
           throw new Error(
             `Account locked. Try again after ${user.lockoutUntil.toLocaleTimeString()}`
           );
         }
 
-        const isValidPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        const isValidPassword = await bcrypt.compare(password, user.password);
 
         if (!isValidPassword) {
-          // Increment failed attempts
           const failedAttempts = user.failedAttempts + 1;
           const lockoutUntil =
             failedAttempts >= 5
-              ? new Date(currentTime.getTime() + 15 * 60 * 1000) // 15 minutes lockout
+              ? new Date(currentTime.getTime() + 15 * 60 * 1000)
               : null;
 
           await prisma.user.update({
-            where: { email: user.email! },
+            where: { email },
             data: {
               failedAttempts,
               lockoutUntil,
@@ -57,17 +66,15 @@ export const AuthOptions: NextAuthOptions = {
           });
 
           if (lockoutUntil) {
-            throw new Error(
-              "Too many failed attempts. Try again in 15 minutes."
-            );
+            throw new Error("Too many failed attempts. Try again in 15 minutes.");
           } else {
             throw new Error("Invalid email or password");
           }
         }
 
-        // Reset failed attempts on successful login
+        // Reset failed attempts
         await prisma.user.update({
-          where: { email: user.email! },
+          where: { email },
           data: {
             failedAttempts: 0,
             lockoutUntil: null,
@@ -92,9 +99,9 @@ export const AuthOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 2 * 60 * 60, // 2 hours in seconds
+    maxAge: 2 * 60 * 60,
   },
-  adapter: PrismaAdapter(new PrismaClient()), // Use a default Prisma client for initialization
+  adapter: PrismaAdapter(new PrismaClient()),
   pages: {
     signIn: "/auth/signIn",
   },
