@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Link from "next/link";
-import DeleteAlertDialog from "../../../../_components/DeleteAlertDialog";
+import DeleteAlertDialog from "@/app/dashboard/superAdmin/_components/DeleteAlertDialog";
 import { useRouter } from "next/navigation";
 
 interface Product {

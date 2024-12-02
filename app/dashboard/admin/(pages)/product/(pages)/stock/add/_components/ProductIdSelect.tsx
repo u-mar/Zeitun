@@ -19,7 +19,7 @@ interface ProductIdSelectProps {
 }
 
 const fetchProducts = async () => {
-    const { data } = await axios.get<Product[]>(`${API}/admin/product`);
+    const { data } = await axios.get<Product[]>(`${API}/superAdmin/product`);
     return data;
 };
 

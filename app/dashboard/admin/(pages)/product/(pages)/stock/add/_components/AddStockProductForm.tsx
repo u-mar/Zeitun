@@ -28,12 +28,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Select from "react-select";
 import { API } from "@/lib/config";
+import { StockQuantity } from "@prisma/client";
 
 // Validation schema
 const stockSchema = z.object({
   productId: z.string().min(1, "Please select a product"),
   variantId: z.string().min(1, "Please select a variant"),
-  skuId: z.string().min(1, "Please select a SKU"),
+  skuId: z.string().min(1, "Please select an SKU"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
 });
 
@@ -41,14 +42,13 @@ const stockSchema = z.object({
 interface Product {
   id: string;
   name: string;
-  price: number;
   variants: Variant[];
 }
 
 interface Variant {
   id: string;
   color: string;
-  SKUs: SKU[];
+  skus: SKU[];
 }
 
 interface SKU {
@@ -58,16 +58,10 @@ interface SKU {
   stockQuantity: number;
 }
 
-// Component
 const StockQuantityForm = ({
   stockQuantity,
 }: {
-  stockQuantity?: {
-    productId: string;
-    variantId: string;
-    skuId: string;
-    quantity: number;
-  };
+  stockQuantity?: StockQuantity;
 }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -92,56 +86,52 @@ const StockQuantityForm = ({
   // Fetch products with variants and SKUs included
   const { data: products, isLoading: loadingProducts } = useQuery({
     queryKey: ["products"],
-    queryFn: () => axios.get<Product[]>(`${API}/admin/product`).then((res) => res.data),
+    queryFn: () =>
+      axios.get<Product[]>(`${API}/admin/product`).then((res) => res.data),
     staleTime: 60 * 1000,
   });
-
-  // Debugging logs
-  useEffect(() => {
-    console.log("Products:", products);
-    console.log("Selected Variants:", selectedVariants);
-    console.log("Selected SKUs:", selectedSKUs);
-  }, [products, selectedVariants, selectedSKUs]);
 
   // Update variants when a product is selected
   useEffect(() => {
     if (watchProductId) {
       const selectedProduct = products?.find((p) => p.id === watchProductId);
       if (selectedProduct) {
-        console.log("Selected Product Variants:", selectedProduct.variants);
         setSelectedVariants(selectedProduct.variants || []);
-        setSelectedSKUs([]);
-        setValue("variantId", "");
-        setValue("skuId", "");
+        setValue("variantId", stockQuantity?.variantId || ""); // Preselect variantId for editing
+        setValue("skuId", stockQuantity?.skuId || ""); // Preselect skuId for editing
       }
     }
-  }, [watchProductId, products, setValue]);
+  }, [watchProductId, products, setValue, stockQuantity]);
 
   // Update SKUs when a variant is selected
   useEffect(() => {
     if (watchVariantId) {
-      const selectedVariant = selectedVariants.find((variant) => variant.id === watchVariantId);
+      const selectedVariant = selectedVariants.find(
+        (variant) => variant.id === watchVariantId
+      );
       if (selectedVariant) {
-        console.log("Selected Variant SKUs:", selectedVariant.SKUs);
-        setSelectedSKUs(selectedVariant.SKUs || []);
-        setValue("skuId", "");
+        setSelectedSKUs(selectedVariant.skus || []);
+        setValue("skuId", stockQuantity?.skuId || ""); // Preselect skuId for editing
       }
     }
-  }, [watchVariantId, selectedVariants, setValue]);
+  }, [watchVariantId, selectedVariants, setValue, stockQuantity]);
 
   const onSubmit = async (values: z.infer<typeof stockSchema>) => {
     setLoading(true);
     try {
       if (stockQuantity) {
         // Update stock quantity
-        await axios.patch(`${API}/admin/stock/${stockQuantity.skuId}`, values);
+        await axios.patch(
+          `${API}/admin/product/stock/${stockQuantity.id}`,
+          values
+        );
         toast.success("Stock updated successfully");
       } else {
         // Add new stock quantity
-        await axios.post(`${API}/admin/stock`, values);
+        await axios.post(`${API}/admin/product/stock`, values);
         toast.success("Stock added successfully");
       }
-      router.push("/dashboard/admin/stock");
+      router.push("/dashboard/admin/product/stock");
     } catch (error) {
       console.error(error);
       toast.error("An error occurred. Please try again.");
@@ -154,7 +144,9 @@ const StockQuantityForm = ({
     <div className="container mx-auto my-10 p-6 bg-gray-50 rounded-lg shadow-xl">
       <Card>
         <CardHeader>
-          <CardTitle>{stockQuantity ? "Update Stock Quantity" : "Add Stock Quantity"}</CardTitle>
+          <CardTitle>
+            {stockQuantity ? "Update Stock Quantity" : "Add Stock Quantity"}
+          </CardTitle>
           <CardDescription>
             {stockQuantity
               ? "Update the existing stock quantity"
@@ -177,20 +169,23 @@ const StockQuantityForm = ({
                       render={({ field }) => (
                         <Select
                           {...field}
+                          value={products
+                            ?.filter((product) => product.id === field.value)
+                            .map((product) => ({
+                              value: product.id,
+                              label: product.name,
+                            }))[0] || null}
                           options={
                             products?.map((product) => ({
                               value: product.id,
                               label: product.name,
                             })) || []
                           }
-                          onChange={(option: any) => {
+                          onChange={(option) => {
                             field.onChange(option?.value || "");
                           }}
                           placeholder="Select a product"
                           isLoading={loadingProducts}
-                          styles={{
-                            control: (base) => ({ ...base, borderRadius: "0.375rem" }),
-                          }}
                         />
                       )}
                     />
@@ -212,20 +207,22 @@ const StockQuantityForm = ({
                       render={({ field }) => (
                         <Select
                           {...field}
+                          value={selectedVariants
+                            ?.filter((variant) => variant.id === field.value)
+                            .map((variant) => ({
+                              value: variant.id,
+                              label: variant.color,
+                            }))[0] || null}
                           options={
                             selectedVariants.map((variant) => ({
                               value: variant.id,
                               label: variant.color,
                             })) || []
                           }
-                          onChange={(option: any) => {
+                          onChange={(option) => {
                             field.onChange(option?.value || "");
                           }}
                           placeholder="Select a variant"
-                          isDisabled={selectedVariants.length === 0}
-                          styles={{
-                            control: (base) => ({ ...base, borderRadius: "0.375rem" }),
-                          }}
                         />
                       )}
                     />
@@ -247,20 +244,22 @@ const StockQuantityForm = ({
                       render={({ field }) => (
                         <Select
                           {...field}
+                          value={selectedSKUs
+                            ?.filter((sku) => sku.id === field.value)
+                            .map((sku) => ({
+                              value: sku.id,
+                              label: `${sku.size} (${sku.stockQuantity} in stock)`,
+                            }))[0] || null}
                           options={
-                            selectedSKUs.map((sku: SKU) => ({
+                            selectedSKUs.map((sku) => ({
                               value: sku.id,
                               label: `${sku.size} (${sku.stockQuantity} in stock)`,
                             })) || []
                           }
-                          onChange={(option: any) => {
+                          onChange={(option) => {
                             field.onChange(option?.value || "");
                           }}
                           placeholder="Select an SKU"
-                          isDisabled={selectedSKUs.length === 0}
-                          styles={{
-                            control: (base) => ({ ...base, borderRadius: "0.375rem" }),
-                          }}
                         />
                       )}
                     />
@@ -277,15 +276,26 @@ const StockQuantityForm = ({
                   <FormItem>
                     <FormLabel>Quantity</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Enter quantity" {...field} />
+                      <Input
+                        type="number"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        placeholder="Enter quantity" {...field}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value) || 0)
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" className="w-full bg-blue-600 text-white mt-6">
-                {loading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : "Submit"}
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="animate-spin h-5 w-5 mx-auto" />
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </form>
           </Form>

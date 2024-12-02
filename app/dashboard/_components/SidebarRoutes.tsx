@@ -13,13 +13,13 @@ import {
   MonitorUp,
   ArrowRightLeft,
   Landmark,
+  PackagePlus,
 } from "lucide-react";
 // import SidebarItem from "./item";
 import Link from "next/link";
 import SidebarItem from "./sub-item";
 import LogoutDialog from "./LogoutDialog";
 import { COMPANY_NAME } from "@/lib/config";
-import { RiTakeawayFill } from "react-icons/ri";
 
 
 const superAdminRoutes = [
@@ -50,6 +50,11 @@ const superAdminRoutes = [
         name: "Orders",
         path: "/dashboard/superAdmin/sales",
         icon: ShoppingCart,
+      },
+      {
+        name: "Stock",
+        path: "/dashboard/superAdmin/product/stock",
+        icon: PackagePlus,
       },
     ],
   },
@@ -153,6 +158,11 @@ const adminRoutes = [
         name: "Orders",
         path: "/dashboard/admin/sales",
         icon: ShoppingCart,
+      },
+      {
+        name: "Stock",
+        path: "/dashboard/admin/product/stock",
+        icon: PackagePlus,
       },
     ],
   },

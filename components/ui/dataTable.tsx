@@ -103,7 +103,6 @@ export function DataTable<TData, TValue>({
   });
 
   //Used to show reset button
-  const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
     <div>

@@ -18,10 +18,11 @@ export default function List() {
     staleTime: 0,
     retry: 3,
   });
-
   if (isLoading) {
     return <Loading />;
   }
+
+  console.log('data', data);
 
   if (isError || !data) {
     return <div>Error loading products.</div>;
@@ -38,7 +39,7 @@ export default function List() {
           </Button>
         </Link>
       </div>
-      <DataTable columns={columns} data={data} search={'product'} />
+      <DataTable columns={columns} data={data} search={'product_name'} />
     </div>
   );
 }

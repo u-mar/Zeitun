@@ -1,10 +1,10 @@
+import DeleteAlertDialog from "@/app/dashboard/superAdmin/_components/DeleteAlertDialog";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Link from "next/link";
-import DeleteAlertDialog from "@/app/dashboard/_components/DeleteAlertDialog";
 import { useRouter } from "next/navigation";
 
-interface Product {
+interface Stock {
   id: string;
   no: number;
 
@@ -24,7 +24,7 @@ interface Product {
   }[];
 }
 
-export const columns: ColumnDef<Product>[] = [
+export const columns: ColumnDef<Stock>[] = [
   {
     accessorKey: "no",
     header: "NO",
@@ -33,14 +33,11 @@ export const columns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: "product",
-    header: "Product",
-    cell: ({ row }) => {
-      return <span className="font-bold">{row.original.product.name}</span>; // Format price
-    },
+    accessorKey: "product.name",
+    header: "product",
   },
   {
-    accessorKey: "Quantity",
+    accessorKey: "quantity",
     header: "Quantity",
     cell: ({ row }) => {
       return <span className="font-bold">{row.original.quantity} units</span>;
@@ -59,18 +56,17 @@ export const columns: ColumnDef<Product>[] = [
     id: "actions",
     header: "Action",
     cell: ({ row }) => {
-      const product = row.original;
+      const stock = row.original;
       const router = useRouter();
-
       return (
         <div className="flex items-center space-x-2">
           {/* Edit Button */}
           <Link
-            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600" href={`/dashboard/admin/product/stock/edit/${product.id}`}>
+            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600" href={`/dashboard/superAdmin/product/stock/edit/${stock.id}`}>
             Edit
           </Link>
           {/* Delete Button */}
-          <DeleteAlertDialog id={product.id} type="stock" />
+          <DeleteAlertDialog id={stock.id} type="stock" />
         </div>
       );
     },

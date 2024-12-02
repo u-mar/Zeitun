@@ -30,41 +30,41 @@ const DeleteAlertDialog = ({ id, type }: { id: string; type: string }) => {
     setLoading(true);
     try {
       if (type === "product") {
-        await axios.delete(`${API}/admin/product/${id}`);
+        await axios.delete(`${API}/superAdmin/product/${id}`);
         queryClient.invalidateQueries({ queryKey: [`product`] });
       } else if (type === "category") {
-        await axios.delete(`${API}/admin/category/${id}`);
+        await axios.delete(`${API}/superAdmin/category/${id}`);
         queryClient.invalidateQueries({ queryKey: [`category`] });
       } else if (type === "order") {
-        await axios.delete(`${API}/admin/sell/${id}`);
+        await axios.delete(`${API}/superAdmin/sell/${id}`);
         queryClient.invalidateQueries({ queryKey: [`order`] });
       } else if (type === "user") {
-        await axios.delete(`${API}/admin/user/${id}`);
+        await axios.delete(`${API}/superAdmin/user/${id}`);
         queryClient.invalidateQueries({ queryKey: [`user`] });
       } else if (type === "transaction") {
-        await axios.delete(`${API}/admin/transaction/${id}`);
+        await axios.delete(`${API}/superAdmin/transaction/${id}`);
         queryClient.invalidateQueries({ queryKey: [`transaction`] });
       } else if (type === "store") {
-        await axios.delete(`${API}/admin/account/${id}`);
+        await axios.delete(`${API}/superAdmin/account/${id}`);
         queryClient.invalidateQueries({ queryKey: [`account`] });
       } else if (type === "transactionCategory") {
-        await axios.delete(`${API}/admin/transaction/category/${id}`);
+        await axios.delete(`${API}/superAdmin/transaction/category/${id}`);
         queryClient.invalidateQueries({ queryKey: [`transactionCategory`] });
       }
        else if (type === "swap") {
-        await axios.delete(`${API}/admin/swap/${id}`);
+        await axios.delete(`${API}/superAdmin/swap/${id}`);
         queryClient.invalidateQueries({ queryKey: [`swap`] });
       }
        else if (type === "bank") {
-        await axios.delete(`${API}/admin/bank/${id}`);
+        await axios.delete(`${API}/superAdmin/bank/${id}`);
         queryClient.invalidateQueries({ queryKey: [`bank`] });
       }
        else if (type === "bankPayment") {
-        await axios.delete(`${API}/admin/bankTransaction/${id}`);
+        await axios.delete(`${API}/superAdmin/bankTransaction/${id}`);
         queryClient.invalidateQueries({ queryKey: [`bankPayment`] });
       }
-       else if (type === "stock") {
-        await axios.delete(`${API}/admin/product/stock/${id}`);
+      else if (type === "stock") {
+        await axios.delete(`${API}/superAdmin/product/stock/${id}`);
         queryClient.invalidateQueries({ queryKey: [`StockProduct`] });
       }
   
