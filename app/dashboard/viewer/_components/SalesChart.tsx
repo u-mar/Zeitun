@@ -104,7 +104,7 @@ const SalesChart: React.FC = () => {
                 Revenue
               </h5>
               <p className="text-gray-900 dark:text-white text-2xl md:text-3xl font-bold">
-                ${totalRevenue.toLocaleString()}
+                {totalRevenue.toLocaleString()}
               </p>
             </div>
           )}
@@ -120,7 +120,7 @@ const SalesChart: React.FC = () => {
                 Profit
               </h5>
               <p className="text-gray-900 dark:text-white text-2xl md:text-3xl font-bold">
-                ${totalProfit.toLocaleString()}
+                {totalProfit.toLocaleString()}
               </p>
             </div>
           )}
