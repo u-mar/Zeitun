@@ -131,7 +131,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
 
   // Fetch products
   const { data: products } = useQuery({
-    queryKey: ["AdminSellProduct"],
+    queryKey: ["adminSellProduct"],
     queryFn: () => axios.get<ProductWithVariants[]>(`${API}/admin/product`).then((res) => res.data),
     staleTime: 60 * 1000,
     retry: 3,
@@ -139,7 +139,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
 
   // Fetch accounts and set default account if available
   const { data: accounts } = useQuery({
-    queryKey: ["AdminSellAccounts"],
+    queryKey: ["adminSellAccounts"],
     queryFn: () => axios.get<Account[]>(`${API}/admin/account`).then((res) => res.data),
     staleTime: 60 * 1000,
     retry: 3,
@@ -158,10 +158,10 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
   // Automatically update cash/digital to match total
   useEffect(() => {
     if (watchCashAmount) {
-      const remainingDigitalAmount = (Number(totalAmount) - Number(watchCashAmount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const remainingDigitalAmount = (Number(totalAmount) - Number(watchCashAmount)).toFixed(2);
       setValue("digitalAmount", Number(remainingDigitalAmount));
     } else if (watchDigitalAmount) {
-      const remainingCashAmount = (Number(totalAmount) - Number(watchDigitalAmount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const remainingCashAmount = (Number(totalAmount) - Number(watchDigitalAmount)).toFixed(2);
       setValue("cashAmount", Number(remainingCashAmount));
     }
   }, [watchCashAmount, watchDigitalAmount, totalAmount, setValue]);
@@ -217,7 +217,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
           (acc, item) => acc + Number(item?.price || 0) * Number(item?.quantity || 0),
           0
         )
-        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        .toFixed(2);
       setTotalAmount(total);
     });
 
@@ -413,7 +413,7 @@ const AddOrderForm: React.FC<{ order?: Order }> = ({ order }) => {
                     {(
                       Number(watchProducts[index]?.price || 0) *
                       Number(watchProducts[index]?.quantity || 0)
-                    ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ).toFixed(2)}
                   </td>
 
                   <td className="p-4 border text-center">
