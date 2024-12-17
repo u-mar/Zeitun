@@ -69,7 +69,7 @@ const SwapInfo = ({ swap }: SwapInfoProps) => {
                 <span>Cash:</span>
                 <span className="font-semibold text-gray-900">
                   {swap.fromCashAmount != null
-                    ? swap.fromCashAmount.toFixed(2)
+                    ? swap.fromCashAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "-"}
                 </span>
               </p>
@@ -77,13 +77,13 @@ const SwapInfo = ({ swap }: SwapInfoProps) => {
                 <span>Digital:</span>
                 <span className="font-semibold text-gray-900">
                   {swap.fromDigitalAmount != null
-                    ? swap.fromDigitalAmount.toFixed(2)
+                    ? swap.fromDigitalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "0"}
                 </span>
               </p>
               <p className="flex justify-between border-t pt-1 font-semibold text-indigo-700">
                 <span>Total:</span>
-                <span>{swap.fromAmount.toFixed(2)}</span>
+                <span>{swap.fromAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </p>
             </div>
           </div>
@@ -95,7 +95,7 @@ const SwapInfo = ({ swap }: SwapInfoProps) => {
                 <span>Cash:</span>
                 <span className="font-semibold text-gray-900">
                   {swap.toCashAmount != null
-                    ? swap.toCashAmount.toFixed(2)
+                    ? swap.toCashAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "-"}
                 </span>
               </p>
@@ -103,13 +103,13 @@ const SwapInfo = ({ swap }: SwapInfoProps) => {
                 <span>Digital:</span>
                 <span className="font-semibold text-gray-900">
                   {swap.toDigitalAmount != null
-                    ? swap.toDigitalAmount.toFixed(2)
+                    ? swap.toDigitalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : "0"}
                 </span>
               </p>
               <p className="flex justify-between border-t pt-1 font-semibold text-indigo-700">
                 <span>Total:</span>
-                <span>{swap.toAmount.toFixed(2)}</span>
+                <span>{swap.toAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </p>
             </div>
           </div>
@@ -119,7 +119,7 @@ const SwapInfo = ({ swap }: SwapInfoProps) => {
           <div className="mt-4">
             <p className="text-sm font-medium text-gray-500">Exchange Rate</p>
             <p className="font-semibold text-gray-900">
-              {swap.exchangeRate.toFixed(2)}
+              {swap.exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         )}

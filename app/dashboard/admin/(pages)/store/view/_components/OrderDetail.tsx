@@ -86,14 +86,14 @@ const OrderView = ({ order }: { order: any }) => {
     const tableEndY = (doc as any).lastAutoTable.finalY + 5;
     doc.setFontSize(10);
     doc.text("Subtotal:", 80, tableEndY);
-    doc.text(`$${order.total.toFixed(2)}`, 120, tableEndY, { align: "right" });
+    doc.text(`$${order.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 120, tableEndY, { align: "right" });
 
     doc.text("Tax:", 80, tableEndY + 7);
     doc.text("$25.50", 120, tableEndY + 7, { align: "right" });
 
     doc.setFont("helvetica", "bold");
     doc.text("Total:", 80, tableEndY + 14);
-    doc.text(`$${(order.total + 25.5).toFixed(2)}`, 120, tableEndY + 14, { align: "right" });
+    doc.text(`$${(order.total + 25.5).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 120, tableEndY + 14, { align: "right" });
 
     // Save the PDF
     doc.save(`Invoice_${order.id}.pdf`);
@@ -195,7 +195,7 @@ const OrderView = ({ order }: { order: any }) => {
         <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
         <div className="flex justify-between mb-4">
           <span>Subtotal</span>
-          <span>${order.total.toFixed(2)}</span>
+          <span>${order.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
 
         {/* Button to mark as paid */}

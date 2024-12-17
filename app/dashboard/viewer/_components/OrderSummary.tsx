@@ -17,7 +17,7 @@ import { API } from '@/lib/config';
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
 const OrderSummary = () => {
-  const [period, setPeriod] = useState('this_week');
+  const [period, setPeriod] = useState('this_month');
   const [chartData, setChartData] = useState<any>(null);
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -41,7 +41,7 @@ const OrderSummary = () => {
         labels: apiData.labels,
         datasets: [
           {
-            label: 'Total Profit',
+            label: 'Total Sales',
             data: apiData.data,
             borderColor: '#FFD700', // Gold color for the line
             backgroundColor: 'rgba(255, 215, 0, 0.2)', // Transparent gold fill

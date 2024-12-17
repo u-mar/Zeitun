@@ -55,8 +55,8 @@ const OrderView = ({ order }: { order: any }) => {
     const itemRows = order.items.map((item: any) => [
       item.product?.name || 'N/A',
       item.quantity.toString(),
-      item.price.toFixed(2),
-      (item.price * item.quantity).toFixed(2),
+      item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      (item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     ]);
 
     autoTable(doc, {
@@ -79,7 +79,7 @@ const OrderView = ({ order }: { order: any }) => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Total:', 80, tableEndY);
-    doc.text(total.toFixed(2), 120, tableEndY, { align: 'right' });
+    doc.text(total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 120, tableEndY, { align: 'right' });
 
     // Save the PDF
     doc.save(`Invoice_${order.id}.pdf`);
@@ -144,7 +144,7 @@ const OrderView = ({ order }: { order: any }) => {
                     </td>
                     <td className="py-3 px-4 border">{item.quantity}</td>
                     <td className="py-3 px-4 border">
-                      {(item.price * item.quantity).toFixed(2)}
+                      {(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -180,7 +180,7 @@ const OrderView = ({ order }: { order: any }) => {
                 (acc: number, item: any) => acc + item.price * item.quantity,
                 0
               )
-              .toFixed(2)}
+              .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
       </div>

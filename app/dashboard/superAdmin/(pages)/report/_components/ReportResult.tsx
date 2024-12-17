@@ -95,7 +95,7 @@ const ReportResult: React.FC<ReportResultProps> = ({ data }) => {
         </div>
         <div className="p-4 bg-gray-50 rounded-lg">
           <p className="font-semibold text-gray-600">
-            Total Sales Amount: ${data.totalSalesAmount.toFixed(2)}
+            Total Sales Amount: ${data.totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div className="p-4 bg-gray-50 rounded-lg">
@@ -144,7 +144,7 @@ const ReportResult: React.FC<ReportResultProps> = ({ data }) => {
                     <td className="border px-4 py-3 text-gray-600">{product.productName}</td>
                     <td className="border px-4 py-3 text-gray-600">{product.quantitySold}</td>
                     <td className="border px-4 py-3 text-gray-600">
-                      ${product.totalAmount.toFixed(2)}
+                      ${product.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -193,7 +193,7 @@ const ReportResult: React.FC<ReportResultProps> = ({ data }) => {
                     <td className="border px-4 py-3 text-gray-600">{category.categoryName}</td>
                     <td className="border px-4 py-3 text-gray-600">{category.quantitySold}</td>
                     <td className="border px-4 py-3 text-gray-600">
-                      ${category.totalAmount.toFixed(2)}
+                      ${category.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -222,7 +222,7 @@ const ReportResult: React.FC<ReportResultProps> = ({ data }) => {
                     <td className="border px-4 py-3 text-gray-600">{product.productName}</td>
                     <td className="border px-4 py-3 text-gray-600">{product.quantitySold}</td>
                     <td className="border px-4 py-3 text-gray-600">
-                      ${product.totalAmount.toFixed(2)}
+                      ${product.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}

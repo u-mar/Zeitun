@@ -235,27 +235,27 @@ export default function TransactionReport() {
 
             <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md hover:bg-opacity-30 transition duration-300">
               <h4 className="text-lg font-semibold mb-2">Total Credit</h4>
-              <p className="text-3xl font-extrabold">KES {results.creditTotal.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold">KES {results.creditTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md hover:bg-opacity-30 transition duration-300">
               <h4 className="text-lg font-semibold mb-2">Total Debit</h4>
-              <p className="text-3xl font-extrabold">KES {results.debitTotal.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold">KES {results.debitTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md hover:bg-opacity-30 transition duration-300">
               <h4 className="text-lg font-semibold mb-2">Total Cash</h4>
-              <p className="text-3xl font-extrabold">KES {results.cashTotal.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold">KES {results.cashTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md hover:bg-opacity-30 transition duration-300">
               <h4 className="text-lg font-semibold mb-2">Total Digital</h4>
-              <p className="text-3xl font-extrabold">KES {results.digitalTotal.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold">KES {results.digitalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md hover:bg-opacity-30 transition duration-300">
               <h4 className="text-lg font-semibold mb-2">Total Amount</h4>
-              <p className="text-3xl font-extrabold">KES {results.totalAmount.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold">KES {results.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
 
             <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md hover:bg-opacity-30 transition duration-300">
@@ -286,7 +286,7 @@ export default function TransactionReport() {
               {currentTransactions.map((transaction) => (
                 <tr key={transaction.id} className="hover:bg-gray-50 text-center">
                   <td className="py-3 px-6 border-b">{transaction.details || "-"}</td>
-                  <td className="py-3 px-6 border-b">{transaction.amount.toFixed(2)}</td>
+                  <td className="py-3 px-6 border-b">{transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="py-3 px-6 border-b">{transaction.type}</td>
                   <td className="py-3 px-6 border-b">{transaction.account.account}</td>
                   <td className="py-3 px-6 border-b">{transaction.acc}</td>

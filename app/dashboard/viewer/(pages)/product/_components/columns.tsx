@@ -1,7 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
+import { ArrowUpDown } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 interface Product {
   id: string;
@@ -26,7 +27,18 @@ interface Product {
 export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "no",
-    header: "NO",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center space-x-2"
+        >
+          <span>NO</span>
+          <ArrowUpDown className="w-4 h-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return <span>{row.index + 1}</span>;
     },
@@ -41,14 +53,36 @@ export const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: "price",
-    header: "Price",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center space-x-2"
+        >
+          <span>Price</span>
+          <ArrowUpDown className="w-4 h-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return <span className="font-bold">{row.original.price}</span>; // Format price
     },
   },
   {
     accessorKey: "stockQuantity",
-    header: "Stock Quantity",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center space-x-2"
+        >
+          <span>Stock Quantity</span>
+          <ArrowUpDown className="w-4 h-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return <span className="font-bold">{row.original.stockQuantity} units</span>;
     },

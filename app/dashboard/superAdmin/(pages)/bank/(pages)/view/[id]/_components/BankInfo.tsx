@@ -84,7 +84,7 @@ const BankInfo: React.FC<BankInfoProps> = ({ bankId }) => {
             <h2 className="text-xl font-semibold text-gray-800">
               {accountType} Account Balance:
               <span className={`ml-2 ${totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {totalBalance.toFixed(2)}
+                {totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </h2>
           </div>
@@ -142,13 +142,13 @@ const BankInfo: React.FC<BankInfoProps> = ({ bankId }) => {
                     {tx.account.account}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {tx.cashBalance.toFixed(2)}
+                    {tx.cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {tx.digitalBalance.toFixed(2)}
+                    {tx.digitalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {tx.amount.toFixed(2)}
+                    {tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {tx.details || "-"}

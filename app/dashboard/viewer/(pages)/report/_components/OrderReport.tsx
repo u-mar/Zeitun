@@ -363,7 +363,7 @@ export default function OrderReport() {
                 className="bg-white p-6 rounded-lg shadow-md text-center transition duration-300 transform hover:scale-105 hover:shadow-xl"
               >
                 <div className={`text-3xl font-bold ${item.color}`}>
-                  {item.value.toFixed(2)} KES
+                  {item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES
                 </div>
                 <div className="text-gray-600">{item.label}</div>
               </div>
@@ -387,10 +387,10 @@ export default function OrderReport() {
                     { label: "To Date", value: results.toDate || "Not Selected Yet" },
                     { label: "Orders Count", value: results.orderCount },
                     { label: "Quantities Sold", value: results.quantityCount },
-                    { label: "Total Cash", value: `${results.cashAmount.toFixed(2)} KES` },
-                    { label: "Total mPesa", value: `${results.digitalAmount.toFixed(2)} KES` },
-                    { label: "Total Amount", value: `${results.totalAmount.toFixed(2)} KES` },
-                    { label: "Profit", value: `${results.profit.toFixed(2)} KES` },
+                    { label: "Total Cash", value: `${results.cashAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES` },
+                    { label: "Total mPesa", value: `${results.digitalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES` },
+                    { label: "Total Amount", value: `${results.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES` },
+                    { label: "Profit", value: `${results.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES` },
                     { label: "Selected User", value: results.selectedUserName || "All Users" },
                     { label: "Selected Category", value: results.selectedCategoryName || "All Categories" },
                     { label: "Selected Product", value: results.selectedProductName || "All Products" },
@@ -426,10 +426,10 @@ export default function OrderReport() {
                     {currentSoldProducts.map((product, index) => (
                       <tr key={index} className="hover:bg-gray-50 text-center">
                         <td className="py-3 px-6 border-b">{product.productName}</td>
-                        <td className="py-3 px-6 border-b">{product.productPrice.toFixed(2)}</td>
-                        <td className="py-3 px-6 border-b">{product.sellPrice.toFixed(2)}</td>
+                        <td className="py-3 px-6 border-b">{product.productPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="py-3 px-6 border-b">{product.sellPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td className="py-3 px-6 border-b">{product.quantitySold}</td>
-                        <td className="py-3 px-6 border-b">{product.profit.toFixed(2)}</td>
+                        <td className="py-3 px-6 border-b">{product.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td className="py-3 px-6 border-b">
                           {new Date(product.saleDate).toLocaleString("en-US", {
                             year: "numeric",

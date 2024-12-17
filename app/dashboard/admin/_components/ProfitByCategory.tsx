@@ -60,7 +60,7 @@ const ProfitByCategory = () => {
         labels: chartLabels,
         datasets: [
           {
-            label: 'Profit by Category',
+            label: 'Sales by Category',
             data: chartDataValues,
             backgroundColor: backgroundColors.slice(0, chartLabels.length),
             hoverBackgroundColor: hoverBackgroundColors.slice(0, chartLabels.length),
@@ -114,7 +114,7 @@ const ProfitByCategory = () => {
       {/* Right Section: Profit Details */}
       <div className="w-full lg:w-2/3">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold text-gray-900">Profit by Category</h2>
+          <h2 className="text-lg font-bold text-gray-900">Sales by Category</h2>
           {/* Time Period Selector */}
           <select
             className="text-sm text-gray-400 bg-transparent focus:outline-none"
@@ -152,7 +152,7 @@ const ProfitByCategory = () => {
             <div className="text-4xl font-bold text-gray-900 mt-4">
               {totalProfit.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-400 mb-4">Total Profit</div>
+            <div className="text-sm text-gray-400 mb-4">Total Sales</div>
 
             <div className="space-y-3 lg:space-y-6 lg:h-64">
               {/* Category Details */}

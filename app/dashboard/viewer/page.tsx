@@ -1,6 +1,8 @@
 import CardsDetails from "./_components/Card";
 import OrderSummary from "./_components/OrderSummary";
 import ProfitByCategory from "./_components/ProfitByCategory";
+import SalesChart from "./_components/SalesChart";
+import TopProducts from "./_components/TopProducts";
 
 export const revalidate = 10; //revalidate every 10 seconds
 
@@ -19,7 +21,12 @@ const ViewerDashboard = () => {
       <div className="lg:col-span-2">
         <OrderSummary />
       </div>
-     
+      <div className="lg:col-span-4">
+        <SalesChart />
+      </div>
+      <div className="lg:col-span-4">
+        <TopProducts />
+      </div>
     </div>
   );
 };

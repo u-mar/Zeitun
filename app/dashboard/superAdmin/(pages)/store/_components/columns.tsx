@@ -29,14 +29,14 @@ export const columns: ColumnDef<Account>[] = [
     accessorKey: "balance",
     header: "Digital balances",
     cell: ({ row }) => {
-      return <span className="text-gray-700 font-semibold">{row.original.balance.toFixed(2)}</span>; // Format total price
+      return <span className="text-gray-700 font-semibold">{row.original.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>; // Format total price
     },
   },
   {
     accessorKey: "cashBalance",
     header: "Cash Balances",
     cell: ({ row }) => {
-      return <span className="text-gray-700 font-semibold">{row.original.cashBalance.toFixed(2)}</span>; // Format total price
+      return <span className="text-gray-700 font-semibold">{row.original.cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>; // Format total price
     },
   },
   {
@@ -46,7 +46,7 @@ export const columns: ColumnDef<Account>[] = [
       const balance = row.original.balance;
       const cashBalance = row.original.cashBalance;
       const total = cashBalance + balance
-      return <span className="text-gray-700 font-semibold">{total.toFixed(2)}  </span>; // Format total price
+      return <span className="text-gray-700 font-semibold">{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}  </span>; // Format total price
     },
   },
   {

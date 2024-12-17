@@ -33,7 +33,7 @@ export const columns: ColumnDef<Bank>[] = [
   {
     accessorKey: "balance",
     header: "Balance",
-    cell: ({ row }) => <span>{row.original.balance.toFixed(2)}</span>, // Display balance with two decimal places
+    cell: ({ row }) => <span>{row.original.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>, // Display balance with two decimal places
   },
   {
     accessorKey: "createdAt",

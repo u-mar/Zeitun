@@ -187,19 +187,19 @@ export default function ProductReport() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base text-gray-800">
                 <div className="p-4 bg-white rounded-lg shadow-md text-center">
                   <strong>Total Product Value (All Quantities):</strong>
-                  <div className="text-2xl font-semibold text-gray-900">{totals.totalProductValue.toFixed(2)} KES</div>
+                  <div className="text-2xl font-semibold text-gray-900">{totals.totalProductValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES</div>
                 </div>
                 <div className="p-4 bg-white rounded-lg shadow-md text-center">
                   <strong>Total Sales:</strong>
-                  <div className="text-2xl font-semibold text-green-700">{totals.totalSales.toFixed(2)} KES</div>
+                  <div className="text-2xl font-semibold text-green-700">{totals.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES</div>
                 </div>
                 <div className="p-4 bg-white rounded-lg shadow-md text-center">
                   <strong>Total Unsold Value:</strong>
-                  <div className="text-2xl font-semibold text-red-600">{totals.totalUnsoldValue.toFixed(2)} KES</div>
+                  <div className="text-2xl font-semibold text-red-600">{totals.totalUnsoldValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES</div>
                 </div>
                 <div className="p-4 bg-white rounded-lg shadow-md text-center">
                   <strong>Total Profit:</strong>
-                  <div className="text-2xl font-semibold text-blue-700">{totals.totalProfit.toFixed(2)} KES</div>
+                  <div className="text-2xl font-semibold text-blue-700">{totals.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KES</div>
                 </div>
               </div>
             </div>
@@ -223,14 +223,14 @@ export default function ProductReport() {
                   {currentSoldProducts.map((product, index) => (
                     <tr key={index} className="hover:bg-gray-50 text-center">
                       <td className="py-3 px-6 border-b">{product.productName}</td>
-                      <td className="py-3 px-6 border-b">{product.productPrice.toFixed(2)}</td>
+                      <td className="py-3 px-6 border-b">{product.productPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="py-3 px-6 border-b">{product.totalQuantity}</td>
                       <td className="py-3 px-6 border-b">{product.quantitySold}</td>
                       <td className="py-3 px-6 border-b">{product.remainingQuantity}</td>
-                      <td className="py-3 px-6 border-b">{product.totalProductValue.toFixed(2)}</td>
-                      <td className="py-3 px-6 border-b">{product.totalSales.toFixed(2)}</td>
-                      <td className="py-3 px-6 border-b">{product.unsoldValue.toFixed(2)}</td>
-                      <td className="py-3 px-6 border-b">{product.profit.toFixed(2)}</td>
+                      <td className="py-3 px-6 border-b">{product.totalProductValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="py-3 px-6 border-b">{product.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="py-3 px-6 border-b">{product.unsoldValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="py-3 px-6 border-b">{product.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
                 </tbody>

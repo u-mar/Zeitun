@@ -2,27 +2,37 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/lib/config';
+import { MdEventAvailable, MdProductionQuantityLimits } from 'react-icons/md';
+import { MoveDownIcon } from 'lucide-react';
+import { HiOutlineArrowDown } from 'react-icons/hi';
+import { TbHourglassEmpty } from "react-icons/tb";
+import { FaHourglassEnd } from 'react-icons/fa';
 
 interface CardProps {
   title?: string;
   content: string | number;
   footer?: string;
+  icon: React.ReactElement;
+  bgColor: string;
 }
 
-export const revalidate = 10; //revalidate every 10 seconds
+export const revalidate = 10; // Revalidate every 10 seconds
 
-const Card: React.FC<CardProps> = ({ title, content }) => {
+const Card: React.FC<CardProps> = ({ title, content, icon, bgColor }) => {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      {/* Title */}
-      {title && <div className="text-gray-500 text-sm">{title}</div>}
-      {/* Main Content */}
-      <div className="text-4xl font-bold text-gray-900">{content}</div>
+    <div className={`flex items-center ${bgColor} text-white rounded-lg shadow-lg p-6 h-28`}>
+      {/* Icon */}
+      <div className="bg-white/20 p-4 rounded-full text-white mr-6">
+        {icon}
+      </div>
+      {/* Text */}
+      <div>
+        {title && <div className="text-sm font-medium opacity-90">{title}</div>}
+        <div className="text-3xl font-bold">{content}</div>
+      </div>
     </div>
   );
 };
-
-Card;
 
 const CardsDetails = () => {
   const [stats, setStats] = useState<{
@@ -50,7 +60,6 @@ const CardsDetails = () => {
   }, []);
 
   if (loading) {
-    // Loading skeletons
     return (
       <>
         <div className="bg-white rounded-lg shadow p-6 animate-pulse">
@@ -85,22 +94,30 @@ const CardsDetails = () => {
       {/* Total Products */}
       <Card
         title="Total Products"
-        content={stats?.totalProducts.toLocaleString() || '0'}
+        content={stats!.totalProducts.toLocaleString() }
+        icon={<MdProductionQuantityLimits size={32} />}
+        bgColor="bg-gradient-to-r from-blue-500 to-blue-600"
       />
       {/* Available Stock */}
       <Card
         title="Available Stock"
-        content={stats?.availableStock.toLocaleString() || '0'}
+        content={stats!.availableStock.toLocaleString()}
+        icon={<MdEventAvailable size={32} />}
+        bgColor="bg-gradient-to-r from-green-500 to-green-600"
       />
       {/* Low Stock */}
       <Card
         title="Low Stock"
-        content={stats?.lowStock.toLocaleString() || '0'}
+        content={stats!.lowStock.toLocaleString()}
+        icon={<FaHourglassEnd size={32} />}
+        bgColor="bg-gradient-to-r from-yellow-500 to-yellow-600"
       />
       {/* Out of Stock */}
       <Card
         title="Out of Stock"
-        content={stats?.outOfStock.toLocaleString() || '0'}
+        content={stats!.outOfStock.toLocaleString()}
+        icon={<TbHourglassEmpty size={32} />}
+        bgColor="bg-gradient-to-r from-red-500 to-red-600"
       />
     </>
   );

@@ -43,7 +43,7 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: "price",
     header: "Price",
     cell: ({ row }) => {
-      return <span>{row.original.price.toFixed(2)}</span>; // Format price
+      return <span>{row.original.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>; // Format price
     },
   },
   {

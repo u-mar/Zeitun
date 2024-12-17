@@ -103,20 +103,11 @@ export function DataTable<TData, TValue>({
   });
 
   //Used to show reset button
+  const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
     <div>
-      {type === "transaction" && (
-        <div className="flex items-center space-x-2 ml-4">
-          <Link
-            href={`/dashboard/admin/transaction/category`}
-            className="flex items-center px-2 py-1 sm:px-4 sm:py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 w-auto sm:w-auto text-sm sm:text-sm"
-          >
-            <GroupIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-            <span className="truncate">Transaction categories</span>
-          </Link>
-        </div>
-      )}
+      
       <div className="flex justify-between py-4">
         <div className="flex gap-3">
           <Input

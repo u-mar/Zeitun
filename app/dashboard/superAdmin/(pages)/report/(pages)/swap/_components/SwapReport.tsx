@@ -240,7 +240,7 @@ export default function SwapReport() {
                                         <td className="py-3 px-6 border-b">{transaction.toAccount.account}</td>
                                         <td className="py-3 px-6 border-b">{transaction.fromAmount}</td>
                                         <td className="py-3 px-6 border-b">{transaction.toAmount}</td>
-                                        <td className="py-3 px-6 border-b">{transaction.exchangeRate.toFixed(2)}</td>
+                                        <td className="py-3 px-6 border-b">{transaction.exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td className="py-3 px-6 border-b">
                                             {new Date(transaction.createdAt).toLocaleDateString()}
                                         </td>

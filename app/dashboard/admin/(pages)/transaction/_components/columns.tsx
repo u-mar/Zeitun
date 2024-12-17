@@ -61,8 +61,8 @@ export const columns: ColumnDef<Transaction>[] = [
       const amountType = row.original.account.account;
       const formattedAmount =
         amountType === "USD"
-          ? `$${row.original.amount.toFixed(2)}`
-          : row.original.amount.toFixed(2);
+          ? `$${row.original.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : row.original.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       return <span>{formattedAmount}</span>; // Format amount
     },
   },

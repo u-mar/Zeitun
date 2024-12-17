@@ -57,19 +57,19 @@ export const columns: ColumnDef<Swap>[] = [
   {
     accessorKey: "toAmount",
     header: "To Amount",
-    cell: ({ row }) => <span>{row.original.toAmount.toFixed(2)}</span>,
+    cell: ({ row }) => <span>{row.original.toAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
   },
   {
     accessorKey: "fromAmount",
     header: "From Amount",
-    cell: ({ row }) => <span>{row.original.fromAmount.toFixed(2)}</span>,
+    cell: ({ row }) => <span>{row.original.fromAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
   },
   {
     accessorKey: "exchangeRate",
     header: "Exchange Rate",
     cell: ({ row }) =>
       row.original.exchangeRate ? (
-        <span>{row.original.exchangeRate.toFixed(2)}</span>
+        <span>{row.original.exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
       ) : (
         <span className="text-center">-</span>
       ),

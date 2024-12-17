@@ -287,19 +287,19 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                   <p>
                     Cash:{" "}
                     <span className="font-semibold">
-                      {form.watch("fromCashAmount").toFixed(2)}
+                      {form.watch("fromCashAmount").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </p>
                   <p>
                     Digital:{" "}
                     <span className="font-semibold">
-                      {form.watch("fromDigitalAmount").toFixed(2)}
+                      {form.watch("fromDigitalAmount").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </p>
                   <p>
                     Total:{" "}
                     <span className="font-semibold">
-                      {(form.watch("fromCashAmount") + form.watch("fromDigitalAmount")).toFixed(2)}
+                      {(form.watch("fromCashAmount") + form.watch("fromDigitalAmount")).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </p>
                 </div>
@@ -310,19 +310,19 @@ const AddSwapForm = ({ swap }: { swap?: AccountSwap }) => {
                   <p>
                     Cash:{" "}
                     <span className="font-semibold">
-                      {form.watch("toCashAmount").toFixed(2)}
+                      {form.watch("toCashAmount").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </p>
                   <p>
                     Digital:{" "}
                     <span className="font-semibold">
-                      {form.watch("toDigitalAmount").toFixed(2)}
+                      {form.watch("toDigitalAmount").toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </p>
                   <p>
                     Total:{" "}
                     <span className="font-semibold">
-                      {(form.watch("toCashAmount") + form.watch("toDigitalAmount")).toFixed(2)}
+                      {(form.watch("toCashAmount") + form.watch("toDigitalAmount")).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </p>
                 </div>

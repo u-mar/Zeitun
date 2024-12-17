@@ -206,7 +206,7 @@ export default function ExchangeReport() {
                         </div>
                         <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md">
                             <h4 className="text-lg font-semibold mb-2">Total Deposit Amount</h4>
-                            <p className="text-3xl font-bold">KES {results.summary.totalDepositAmount.toFixed(2)}</p>
+                            <p className="text-3xl font-bold">KES {results.summary.totalDepositAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md">
                             <h4 className="text-lg font-semibold mb-2">Total Withdrawals</h4>
@@ -214,7 +214,7 @@ export default function ExchangeReport() {
                         </div>
                         <div className="p-4 bg-white bg-opacity-20 rounded-lg shadow-md">
                             <h4 className="text-lg font-semibold mb-2">Total Withdrawal Amount</h4>
-                            <p className="text-3xl font-bold">KES {results.summary.totalWithdrawalAmount.toFixed(2)}</p>
+                            <p className="text-3xl font-bold">KES {results.summary.totalWithdrawalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                     </div>
                 </section>

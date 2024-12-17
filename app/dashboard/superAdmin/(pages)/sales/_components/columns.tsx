@@ -76,7 +76,7 @@ export const columns: ColumnDef<Order>[] = [
     accessorKey: "total",
     header: "Total Price",
     cell: ({ row }) => {
-      return <span className="text-gray-700 font-semibold">{row.original.total.toFixed(2)}</span>; // Format total price
+      return <span className="text-gray-700 font-semibold">{row.original.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>; // Format total price
     },
   },
   
