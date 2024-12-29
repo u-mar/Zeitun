@@ -252,8 +252,8 @@ export async function PATCH(
           return updatedSell;
         },
         {
-          maxWait: 30000,
-          timeout: 60000,
+          maxWait: 15000,
+          timeout: 30000,
         }
       );
 
@@ -410,8 +410,8 @@ export async function DELETE(
           });
         },
         {
-          maxWait: 30000, // Increase wait time to 15 seconds (default is 2000 ms)
-          timeout: 60000, // Increase transaction timeout to 30 seconds (default is 5000 ms)
+          maxWait: 15000, // Increase wait time to 15 seconds (default is 2000 ms)
+          timeout: 30000, // Increase transaction timeout to 30 seconds (default is 5000 ms)
         }
       );
 

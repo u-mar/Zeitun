@@ -193,8 +193,8 @@ export async function POST(request: NextRequest) {
           return createdSell;
         },
         {
-          maxWait: 30000,
-          timeout: 60000,
+          maxWait: 15000,
+          timeout: 30000,
         }
       );
 
