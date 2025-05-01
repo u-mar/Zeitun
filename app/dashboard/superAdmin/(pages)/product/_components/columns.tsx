@@ -4,7 +4,23 @@ import Link from "next/link";
 import DeleteAlertDialog from "../../../../_components/DeleteAlertDialog";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown } from "lucide-react";
+import { 
+  ArrowUpDown, 
+  Eye, 
+  Edit, 
+  PackageCheck, 
+  Calendar, 
+  Tag, 
+  Layers 
+} from "lucide-react";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -34,92 +50,149 @@ export const columns: ColumnDef<Product>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-1 hover:text-primary transition-all"
         >
-          <span>NO</span>
-          <ArrowUpDown className="w-4 h-4" />
+          <span>#</span>
+          <ArrowUpDown className="w-3 h-3" />
         </Button>
       );
     },
-    cell: ({ row }) => {
-      return <span>{row.index + 1}</span>;
-    },
+    cell: ({ row }) => (
+      <div className="font-mono text-xs bg-slate-100 dark:bg-slate-800 w-6 h-6 rounded-full flex items-center justify-center">
+        {row.index + 1}
+      </div>
+    ),
   },
   {
     accessorKey: "name",
-    header: "Product Name",
+    header: ({ column }) => (
+      <div className="flex items-center space-x-2">
+        <Tag className="w-4 h-4 text-primary" />
+        <span>Product</span>
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="font-medium max-w-[180px] truncate">
+        {row.original.name}
+      </div>
+    ),
   },
   {
     accessorKey: "category.name",
-    header: "Category", // Accessing the category name directly
+    header: ({ column }) => (
+      <div className="flex items-center space-x-2">
+        <Layers className="w-4 h-4 text-primary" />
+        <span>Category</span>
+      </div>
+    ),
+    cell: ({ row }) => (
+      <Badge variant="outline" className="bg-primary/10 hover:bg-primary/20">
+        {row.original.category.name}
+      </Badge>
+    ),
   },
   {
     accessorKey: "price",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center space-x-2"
-        >
-          <span>Price</span>
-          <ArrowUpDown className="w-4 h-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return <span className="font-bold">{row.original.price}</span>; // Format price
-    },
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="flex items-center space-x-2 hover:text-primary transition-all"
+      >
+        <span>Price</span>
+        <ArrowUpDown className="w-3 h-3" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="font-bold text-emerald-600 dark:text-emerald-400">
+        ${row.original.price.toFixed(2)}
+      </div>
+    ),
   },
   {
     accessorKey: "stockQuantity",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center space-x-2"
-        >
-          <span>Stock Quantity</span>
-          <ArrowUpDown className="w-4 h-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="flex items-center space-x-2 hover:text-primary transition-all"
+      >
+        <span>Stock</span>
+        <ArrowUpDown className="w-3 h-3" />
+      </Button>
+    ),
     cell: ({ row }) => {
-      return <span className="font-bold">{row.original.stockQuantity} units</span>;
+      const stock = row.original.stockQuantity;
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <div className={cn(
+                "flex items-center gap-1.5 font-medium",
+                stock <= 10 ? "text-red-500" : 
+                stock <= 30 ? "text-amber-500" : "text-green-500"
+              )}>
+                <PackageCheck className="w-4 h-4" />
+                <span>{stock}</span>
+                <Badge variant="outline" className={cn(
+                  "text-xs font-normal ml-1",
+                  stock <= 10 ? "bg-red-100 text-red-800" : 
+                  stock <= 30 ? "bg-amber-100 text-amber-800" : 
+                  "bg-green-100 text-green-800"
+                )}>
+                  {stock <= 10 ? "Low" : stock <= 30 ? "Medium" : "Good"}
+                </Badge>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{stock} units in stock</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
     },
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: ({ column }) => (
+      <div className="flex items-center space-x-2">
+        <Calendar className="w-4 h-4 text-primary" />
+        <span>Created At</span>
+      </div>
+    ),
     cell: ({ row }) => {
       const date = new Date(row.original.createdAt);
-      return format(date, "PPpp"); // Format date to include full date and time
+      return (
+        <div className="text-sm text-muted-foreground">
+          {format(date, "PPP")}
+          <div className="text-xs opacity-70">{format(date, "p")}</div>
+        </div>
+      );
     },
   },
-
   {
     id: "actions",
-    header: "Action",
+    header: "Actions",
     cell: ({ row }) => {
       const product = row.original;
       const router = useRouter();
 
       return (
         <div className="flex items-center space-x-2">
-          {/* View Button */}
           <Link href={`/dashboard/superAdmin/product/view/${product.id}`}>
-            <button className="px-3 py-1 border border-gray-400 rounded hover:bg-gray-100">
-              View
-            </button>
+            <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:bg-primary/10">
+              <Eye className="w-4 h-4" />
+              <span>View</span>
+            </Button>
           </Link>
 
-          {/* Edit Button */}
-          <Link
-            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600" href={`/dashboard/superAdmin/product/edit/${product.id}`}>
-            Edit
+          <Link href={`/dashboard/superAdmin/product/edit/${product.id}`}>
+            <Button variant="outline" size="sm" className="flex items-center gap-1 bg-amber-50 text-amber-600 border-amber-300 hover:bg-amber-100">
+              <Edit className="w-4 h-4" />
+              <span>Edit</span>
+            </Button>
           </Link>
-          {/* Delete Button */}
+          
           <DeleteAlertDialog id={product.id} type="product" />
         </div>
       );
