@@ -61,7 +61,7 @@ export const AuthOptions: NextAuthOptions = {
               : null;
 
           await prisma.user.update({
-            where: { email },
+            where: { email: normalizedEmail },
             data: {
               failedAttempts,
               lockoutUntil,
@@ -77,7 +77,7 @@ export const AuthOptions: NextAuthOptions = {
 
         // Reset failed attempts
         await prisma.user.update({
-          where: { email },
+          where: { email: normalizedEmail },
           data: {
             failedAttempts: 0,
             lockoutUntil: null,
