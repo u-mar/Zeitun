@@ -62,19 +62,9 @@ const superAdminRoutes = [
     title: "FINANCES",
     items: [
       {
-        name: "Transactions",
+        name: "Expenses",
         path: "/dashboard/superAdmin/transaction",
         icon: Send,
-      },
-      {
-        name: "Swap",
-        path: "/dashboard/superAdmin/swap",
-        icon: ArrowRightLeft,
-      },
-      {
-        name: "Bank",
-        path: "/dashboard/superAdmin/bank",
-        icon: Landmark,
       },
       {
         name: "Report",
@@ -92,20 +82,7 @@ const superAdminRoutes = [
             name: "Transactions Report",
             path: "/dashboard/superAdmin/report/transaction",
           },
-          {
-            name: "Exchange Report",
-            path: "/dashboard/superAdmin/report/exchange",
-          },
-          {
-            name: "Swaps Report",
-            path: "/dashboard/superAdmin/report/swap",
-          },
         ],
-      },
-      {
-        name: "Store",
-        path: "/dashboard/superAdmin/store",
-        icon: Store,
       },
     ],
   },

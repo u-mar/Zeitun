@@ -112,13 +112,6 @@ export async function GET(
 ) {
   // Get The account
 
-  if (request.headers.get("content-length") === "0") {
-    return NextResponse.json(
-      { error: "you have to provide body information" },
-      { status: 400 }
-    );
-  }
-
   const account = await prisma?.accounts.findUnique({
     where: {
       id: params.id,
